@@ -1,4 +1,4 @@
-﻿Public Class SourceMdlBodyPart2531
+Public Class SourceMdlBodyPart2531
 
 	'FROM: Bloodlines SDK source 2015-06-16\sdk-src (16.06.2015)\src\public\studio.h
 	'struct mstudiobodyparts_t
@@ -19,5 +19,6 @@
 
 	Public theName As String
 	Public theModels As List(Of SourceMdlModel2531)
+	Public theModelCommandIsUsed As Boolean
 
 End Class

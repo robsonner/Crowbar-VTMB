@@ -1,4 +1,4 @@
-﻿Imports System.IO
+Imports System.IO
 Imports System.Text
 
 Public Class SourceQcFile2531
@@ -125,6 +125,11 @@ Public Class SourceQcFile2531
 			For bodyPartIndex As Integer = 0 To Me.theMdlFileData.theBodyParts.Count - 1
 				aBodyPart = Me.theMdlFileData.theBodyParts(bodyPartIndex)
 
+				If aBodyPart.theModelCommandIsUsed Then
+					Me.WriteModelCommand(aBodyPart)
+					Continue For
+				End If
+
 				If TheApp.Settings.DecompileQcUseMixedCaseForKeywordsIsChecked Then
 					line = "$BodyGroup "
 				Else
@@ -160,6 +165,187 @@ Public Class SourceQcFile2531
 				Me.theOutputFileStreamWriter.WriteLine(line)
 			Next
 		End If
+	End Sub
+
+	Public Sub WriteModelCommand(ByVal aBodyPart As SourceMdlBodyPart2531)
+		Dim line As String = ""
+		Dim bodyPartIndex As Integer
+		Dim aBodyModel As SourceMdlModel2531
+
+		If aBodyPart.theModels Is Nothing OrElse aBodyPart.theModels.Count = 0 Then
+			Exit Sub
+		End If
+
+		aBodyModel = aBodyPart.theModels(0)
+		bodyPartIndex = Me.theMdlFileData.theBodyParts.IndexOf(aBodyPart)
+		aBodyModel.theSmdFileNames(0) = SourceFileNamesModule.CreateBodyGroupSmdFileName(aBodyModel.theSmdFileNames(0), bodyPartIndex, 0, 0, Me.theModelName, aBodyModel.theName)
+
+		If TheApp.Settings.DecompileQcUseMixedCaseForKeywordsIsChecked Then
+			line = "$Model "
+		Else
+			line = "$model "
+		End If
+		line += """"
+		line += aBodyPart.theName
+		line += """ """
+		line += aBodyModel.theSmdFileNames(0)
+		line += """"
+		line += " {"
+		Me.theOutputFileStreamWriter.WriteLine(line)
+
+		If aBodyModel.theEyeballs IsNot Nothing AndAlso aBodyModel.theEyeballs.Count > 0 Then
+			Me.WriteEyeballLines(aBodyModel)
+		End If
+
+		line = "}"
+		Me.theOutputFileStreamWriter.WriteLine(line)
+	End Sub
+
+	Private Sub WriteEyeballLines(ByVal aBodyModel As SourceMdlModel2531)
+		Dim line As String = ""
+		Dim anEyeball As SourceMdlEyeball2531
+		Dim eyeballTextureName As String
+		Dim irisTextureName As String
+		Dim diameter As Double
+		Dim angle As Double
+		Dim irisScale As Double
+		Dim eyeballPosition As SourceVector
+
+		For eyeballIndex As Integer = 0 To aBodyModel.theEyeballs.Count - 1
+			anEyeball = aBodyModel.theEyeballs(eyeballIndex)
+
+			Dim aBone As SourceMdlBone2531 = Nothing
+			If anEyeball.boneIndex >= 0 AndAlso anEyeball.boneIndex < Me.theMdlFileData.theBones.Count Then
+				aBone = Me.theMdlFileData.theBones(anEyeball.boneIndex)
+			End If
+
+			If aBone IsNot Nothing Then
+				eyeballPosition = MathModule.VectorITransform(anEyeball.org, aBone.poseToBoneColumn0, aBone.poseToBoneColumn1, aBone.poseToBoneColumn2, aBone.poseToBoneColumn3)
+			Else
+				eyeballPosition = anEyeball.org
+			End If
+
+			diameter = anEyeball.radius * 2
+			angle = Math.Round(MathModule.RadiansToDegrees(Math.Atan(anEyeball.zOffset)), 6)
+			If anEyeball.iris_scale <> 0 Then
+				irisScale = 1 / anEyeball.iris_scale
+			Else
+				irisScale = 1
+			End If
+
+			Dim eyeballName As String
+			If Not String.IsNullOrEmpty(anEyeball.theName) Then
+				eyeballName = anEyeball.theName
+			ElseIf eyeballIndex = 0 AndAlso angle > 0 Then
+				eyeballName = "righteye"
+			ElseIf eyeballIndex = 1 AndAlso angle < 0 Then
+				eyeballName = "lefteye"
+			ElseIf eyeballIndex = 0 Then
+				eyeballName = "righteye"
+			ElseIf eyeballIndex = 1 Then
+				eyeballName = "lefteye"
+			Else
+				eyeballName = "eye_" + eyeballIndex.ToString(TheApp.InternalNumberFormat)
+			End If
+
+			' Resolve textures
+			eyeballTextureName = ""
+			irisTextureName = ""
+
+			' 1. Match dedicated eyeball mesh texture from model textures (e.g. Eyeball_r / Eyeball_l)
+			If Me.theMdlFileData.theTextures IsNot Nothing Then
+				For Each aTexture As SourceMdlTexture2531 In Me.theMdlFileData.theTextures
+					Dim texLower As String = aTexture.theFileName.ToLower()
+					If (eyeballIndex = 0 OrElse eyeballName.ToLower().Contains("right")) AndAlso (texLower.Contains("eyeball_r") OrElse (texLower.EndsWith("_r") AndAlso texLower.Contains("eye"))) Then
+						eyeballTextureName = aTexture.theFileName
+						Exit For
+					ElseIf (eyeballIndex = 1 OrElse eyeballName.ToLower().Contains("left")) AndAlso (texLower.Contains("eyeball_l") OrElse (texLower.EndsWith("_l") AndAlso texLower.Contains("eye"))) Then
+						eyeballTextureName = aTexture.theFileName
+						Exit For
+					End If
+				Next
+				If String.IsNullOrEmpty(eyeballTextureName) Then
+					For Each aTexture As SourceMdlTexture2531 In Me.theMdlFileData.theTextures
+						Dim texLower As String = aTexture.theFileName.ToLower()
+						If texLower.Contains("eyeball") Then
+							eyeballTextureName = aTexture.theFileName
+							Exit For
+						End If
+					Next
+				End If
+			End If
+
+			' 2. Fallback to anEyeball.texture if valid, or default name
+			Dim eyeballTextureIsFallback As Boolean = False
+			If String.IsNullOrEmpty(eyeballTextureName) Then
+				eyeballTextureIsFallback = True
+				If anEyeball.texture > 0 AndAlso anEyeball.texture < Me.theMdlFileData.theTextures.Count Then
+					eyeballTextureName = Me.theMdlFileData.theTextures(anEyeball.texture).theFileName
+				ElseIf eyeballIndex = 0 Then
+					eyeballTextureName = "Eyeball_r"
+				Else
+					eyeballTextureName = "Eyeball_l"
+				End If
+			End If
+
+			If anEyeball.iris_material >= 0 AndAlso anEyeball.iris_material < Me.theMdlFileData.theTextures.Count Then
+				irisTextureName = Me.theMdlFileData.theTextures(anEyeball.iris_material).theFileName
+			End If
+
+			If String.IsNullOrEmpty(irisTextureName) OrElse irisTextureName = "default" Then
+				If eyeballIndex = 0 Then
+					irisTextureName = "Pupil_r"
+				Else
+					irisTextureName = "Pupil_l"
+				End If
+				If Me.theMdlFileData.theTextures IsNot Nothing Then
+					For Each aTexture As SourceMdlTexture2531 In Me.theMdlFileData.theTextures
+						If aTexture.theFileName.ToLower().Contains("pupil_r") AndAlso eyeballIndex = 0 Then
+							irisTextureName = aTexture.theFileName
+							Exit For
+						ElseIf aTexture.theFileName.ToLower().Contains("pupil_l") AndAlso eyeballIndex = 1 Then
+							irisTextureName = aTexture.theFileName
+							Exit For
+						ElseIf aTexture.theFileName.ToLower().Contains("pupil") Then
+							irisTextureName = aTexture.theFileName
+						End If
+					Next
+				End If
+			End If
+
+			Dim boneName As String = "Bip01 Head"
+			If aBone IsNot Nothing Then
+				boneName = aBone.theName
+			End If
+
+			If eyeballTextureIsFallback Then
+				line = vbTab + "// WARNING: Eyeball texture not matched in model texture list; fallback used: """ + eyeballTextureName + """"
+				Me.theOutputFileStreamWriter.WriteLine(line)
+			End If
+
+			line = vbTab
+			line += "eyeball """
+			line += eyeballName
+			line += """ """
+			line += boneName
+			line += """ "
+			line += eyeballPosition.x.ToString("0.000000", TheApp.InternalNumberFormat)
+			line += " "
+			line += eyeballPosition.y.ToString("0.000000", TheApp.InternalNumberFormat)
+			line += " "
+			line += eyeballPosition.z.ToString("0.000000", TheApp.InternalNumberFormat)
+			line += " """
+			line += eyeballTextureName
+			line += """ "
+			line += diameter.ToString("0.######", TheApp.InternalNumberFormat)
+			line += " "
+			line += angle.ToString("0.######", TheApp.InternalNumberFormat)
+			line += " """
+			line += irisTextureName
+			line += """ "
+			line += Math.Round(irisScale, 6).ToString("0.######", TheApp.InternalNumberFormat)
+			Me.theOutputFileStreamWriter.WriteLine(line)
+		Next
 	End Sub
 
 	Public Sub WriteCBoxCommand()

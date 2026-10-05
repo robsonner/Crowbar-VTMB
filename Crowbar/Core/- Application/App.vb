@@ -270,14 +270,18 @@ Public Class App
 
 	'TODO: [GetCustomDataPath] Have location option where custom data and settings is saved.
 	Public Function GetCustomDataPath() As String
-		Dim customDataPath As String
-		'Dim appDataPath As String
+		Dim appPath As String = Me.theAppPath
+		If String.IsNullOrEmpty(appPath) Then
+			appPath = Application.StartupPath
+		End If
 
-		'' If the settings file exists in the app's Data folder, then load it.
-		'appDataPath = Me.GetAppDataPath()
-		'If appDataPath <> "" Then
-		'	customDataPath = appDataPath
-		'Else
+		' If a local settings file exists in the app folder, enable portable mode.
+		Dim localSettingsPathFileName As String = Path.Combine(appPath, App.theAppSettingsFileName)
+		If File.Exists(localSettingsPathFileName) Then
+			Return appPath
+		End If
+
+		Dim customDataPath As String
 		'NOTE: Use "standard Windows location for app data".
 		'NOTE: Using Path.Combine in case theStartupFolder is a root folder, like "C:\".
 		customDataPath = Path.Combine(Environment.GetFolderPath(Environment.SpecialFolder.ApplicationData), "ZeqMacaw")
@@ -288,7 +292,6 @@ Public Class App
 		customDataPath += My.Application.Info.Version.ToString(2)
 
 		FileManager.CreatePath(customDataPath)
-		'End If
 
 		Return customDataPath
 	End Function

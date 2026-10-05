@@ -1,4 +1,4 @@
-﻿Imports System.IO
+Imports System.IO
 
 Public Class SourceMdlFile2531
 
@@ -1719,6 +1719,10 @@ Public Class SourceMdlFile2531
 
 					'NOTE: Call ReadEyeballs() before ReadMeshes() so that ReadMeshes can fill-in the eyeball.theTextureIndex values.
 					Me.ReadEyeballs(modelInputFileStreamPosition, aModel)
+					If aModel.theEyeballs IsNot Nothing AndAlso aModel.theEyeballs.Count > 0 Then
+						aBodyPart.theModelCommandIsUsed = True
+						Me.theMdlFileData.theModelCommandIsUsed = True
+					End If
 					Me.ReadMeshes(modelInputFileStreamPosition, aModel)
 					'If (Me.theMdlFileData.flags And SourceMdlFileData2531.STUDIOHDR_FLAGS_STATIC_PROP) > 0 Then
 					If aModel.vertexListType = 0 Then

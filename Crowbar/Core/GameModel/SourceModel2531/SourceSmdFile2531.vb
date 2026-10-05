@@ -1,4 +1,4 @@
-﻿Imports System.IO
+Imports System.IO
 
 Public Class SourceSmdFile2531
 
@@ -290,7 +290,7 @@ Public Class SourceSmdFile2531
 						For triangleIndex As Integer = 0 To faceSection.theFaces.Count - 1
 							aTriangle = faceSection.theFaces(triangleIndex)
 
-							line = "  phy"
+							line = "phy"
 							Me.theOutputFileStreamWriter.WriteLine(line)
 
 							For vertexIndex As Integer = 0 To aTriangle.vertexIndex.Length - 1
@@ -301,7 +301,7 @@ Public Class SourceSmdFile2531
 								'aVectorTransformed = Me.TransformPhyVertex(aBone, phyVertex.vertex)
 
 								line = "    "
-								line += faceSection.theBoneIndex.ToString(TheApp.InternalNumberFormat)
+								line += boneIndex.ToString(TheApp.InternalNumberFormat)
 								line += " "
 								line += aVectorTransformed.x.ToString("0.000000", TheApp.InternalNumberFormat)
 								line += " "
@@ -1029,32 +1029,32 @@ Public Class SourceSmdFile2531
 		Dim rot As New SourceQuaternion()
 		Dim angleVector As New SourceVector()
 
-		If (aBone.flags And SourceMdlBone2531.STUDIO_PROC_AXISINTERP) > 0 Then
+		If aBone.proceduralRuleType = SourceMdlBone2531.STUDIO_PROC_AXISINTERP Then
 			angleVector.x = 0
 			angleVector.y = 0
 			angleVector.z = 0
 
 			angleVector.debug_text = "anim"
 		Else
-			If anAnimation.theOffsets(3) <= 0 OrElse (aBone.flags And SourceMdlBone2531.STUDIO_PROC_QUATINTERP) > 0 Then
+			If anAnimation.theOffsets(3) <= 0 OrElse aBone.proceduralRuleType = SourceMdlBone2531.STUDIO_PROC_QUATINTERP Then
 				rot.x = aBone.rotation.x
 			Else
 				'rot.x = Me.ExtractAnimValue(frameIndex, anAnimation.theRotationAnimationXValues, aBone.rotationScale.x, aBone.rotation.x)
 				rot.x = Me.ExtractAnimValue(frameIndex, anAnimation.theRotationAnimationXValues, aBone.rotationScale.x, 0)
 			End If
-			If anAnimation.theOffsets(4) <= 0 OrElse (aBone.flags And SourceMdlBone2531.STUDIO_PROC_QUATINTERP) > 0 Then
+			If anAnimation.theOffsets(4) <= 0 OrElse aBone.proceduralRuleType = SourceMdlBone2531.STUDIO_PROC_QUATINTERP Then
 				rot.y = aBone.rotation.y
 			Else
 				'rot.y = Me.ExtractAnimValue(frameIndex, anAnimation.theRotationAnimationYValues, aBone.rotationScale.y, aBone.rotation.y)
 				rot.y = Me.ExtractAnimValue(frameIndex, anAnimation.theRotationAnimationYValues, aBone.rotationScale.y, 0)
 			End If
-			If anAnimation.theOffsets(5) <= 0 OrElse (aBone.flags And SourceMdlBone2531.STUDIO_PROC_QUATINTERP) > 0 Then
+			If anAnimation.theOffsets(5) <= 0 OrElse aBone.proceduralRuleType = SourceMdlBone2531.STUDIO_PROC_QUATINTERP Then
 				rot.z = aBone.rotation.z
 			Else
 				'rot.z = Me.ExtractAnimValue(frameIndex, anAnimation.theRotationAnimationZValues, aBone.rotationScale.z, aBone.rotation.z)
 				rot.z = Me.ExtractAnimValue(frameIndex, anAnimation.theRotationAnimationZValues, aBone.rotationScale.z, 0)
 			End If
-			If anAnimation.theOffsets(6) <= 0 OrElse (aBone.flags And SourceMdlBone2531.STUDIO_PROC_QUATINTERP) > 0 Then
+			If anAnimation.theOffsets(6) <= 0 OrElse aBone.proceduralRuleType = SourceMdlBone2531.STUDIO_PROC_QUATINTERP Then
 				rot.w = aBone.rotation.w
 			Else
 				'rot.w = Me.ExtractAnimValue(frameIndex, anAnimation.theRotationAnimationWValues, aBone.rotationScale.w, aBone.rotation.w)
