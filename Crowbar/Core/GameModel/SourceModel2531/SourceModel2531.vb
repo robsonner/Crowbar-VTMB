@@ -1,4 +1,4 @@
-﻿Imports System.IO
+Imports System.IO
 
 Public Class SourceModel2531
 	Inherits SourceModel10
@@ -68,6 +68,14 @@ Public Class SourceModel2531
 			Else
 				Return False
 			End If
+		End Get
+	End Property
+
+	Public Overrides ReadOnly Property HasProceduralBonesData As Boolean
+		Get
+			Return Me.theMdlFileData IsNot Nothing _
+			 AndAlso Me.theMdlFileData.theProceduralBonesCommandIsUsed _
+			 AndAlso Me.theMdlFileData.theBones IsNot Nothing
 		End Get
 	End Property
 
@@ -259,6 +267,25 @@ Public Class SourceModel2531
 
 		Return status
 	End Function
+
+	Public Overrides Function WriteVrdFile(ByVal vrdPathFileName As String) As AppEnums.StatusMessage
+		Dim status As AppEnums.StatusMessage = StatusMessage.Success
+
+		Me.WriteTextFile(vrdPathFileName, AddressOf Me.WriteVrdFile)
+
+		Return status
+	End Function
+
+	Protected Overrides Sub WriteVrdFile()
+		Dim vrdFile As New SourceVrdFile2531(Me.theOutputFileTextWriter, Me.theMdlFileData)
+
+		Try
+			vrdFile.WriteCommands()
+		Catch ex As Exception
+			Dim debug As Integer = 4242
+		Finally
+		End Try
+	End Sub
 
 	'Public Overrides Function WriteVertexAnimationVtaFile(ByVal vtaPathFileName As String) As AppEnums.StatusMessage
 	'	Dim status As AppEnums.StatusMessage = StatusMessage.Success
@@ -469,6 +496,8 @@ Public Class SourceModel2531
 
 			qcFile.WriteBodyGroupCommand()
 			qcFile.WriteLodCommand()
+
+			qcFile.WriteProceduralBonesCommand()
 
 			qcFile.WriteStaticPropCommand()
 			'qcFile.WriteFlagsCommand()

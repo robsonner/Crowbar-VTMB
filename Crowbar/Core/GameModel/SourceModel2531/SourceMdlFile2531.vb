@@ -229,6 +229,7 @@ Public Class SourceMdlFile2531
 
 					If aBone.proceduralRuleOffset <> 0 Then
 						If aBone.proceduralRuleType = SourceMdlBone2531.STUDIO_PROC_AXISINTERP Then
+							Me.theMdlFileData.theProceduralBonesCommandIsUsed = True
 							Me.ReadAxisInterpBone(boneInputFileStreamPosition, aBone)
 						ElseIf aBone.proceduralRuleType = SourceMdlBone2531.STUDIO_PROC_QUATINTERP Then
 							Me.theMdlFileData.theProceduralBonesCommandIsUsed = True
@@ -1515,7 +1516,7 @@ Public Class SourceMdlFile2531
 				aBone.theAxisInterpBone.quat(x).x = Me.theInputFileReader.ReadSingle()
 				aBone.theAxisInterpBone.quat(x).y = Me.theInputFileReader.ReadSingle()
 				aBone.theAxisInterpBone.quat(x).z = Me.theInputFileReader.ReadSingle()
-				aBone.theAxisInterpBone.quat(x).z = Me.theInputFileReader.ReadSingle()
+				aBone.theAxisInterpBone.quat(x).w = Me.theInputFileReader.ReadSingle()
 			Next
 
 			fileOffsetEnd = Me.theInputFileReader.BaseStream.Position - 1

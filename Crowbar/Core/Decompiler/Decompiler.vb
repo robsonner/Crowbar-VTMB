@@ -867,7 +867,7 @@ Public Class Decompiler
 				AddHandler model.SourceModelProgress, AddressOf Me.Model_SourceModelProgress
 
 				Dim vrdPathFileName As String
-				vrdPathFileName = Path.Combine(Me.theModelOutputPath, SourceFileNamesModule.GetVrdFileName(model.Name))
+				vrdPathFileName = Path.Combine(Me.theModelOutputPath, model.GetProceduralBonesFileName(model.Name))
 
 				status = model.WriteVrdFile(vrdPathFileName)
 

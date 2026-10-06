@@ -794,6 +794,23 @@ Public Class SourceQcFile2531
 		End If
 	End Sub
 
+	Public Sub WriteProceduralBonesCommand()
+		If Me.theMdlFileData.theProceduralBonesCommandIsUsed Then
+			Me.theOutputFileStreamWriter.WriteLine()
+
+			Dim line As String = ""
+			If TheApp.Settings.DecompileQcUseMixedCaseForKeywordsIsChecked Then
+				line = "$ProceduralBones "
+			Else
+				line = "$proceduralbones "
+			End If
+			line += """"
+			line += SourceFileNamesModule.GetVrdFileName(Me.theModelName, 2531)
+			line += """"
+			Me.theOutputFileStreamWriter.WriteLine(line)
+		End If
+	End Sub
+
 	Public Sub WriteModelNameCommand()
 		Dim line As String = ""
 		Dim modelPathFileName As String

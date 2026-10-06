@@ -542,6 +542,10 @@ Public MustInherit Class SourceModel
 		Return status
 	End Function
 
+	Public Overridable Function GetProceduralBonesFileName(ByVal modelName As String) As String
+		Return SourceFileNamesModule.GetVrdFileName(modelName, Me.Version)
+	End Function
+
 	Public Overridable Function WriteVrdFile(ByVal vrdPathFileName As String) As AppEnums.StatusMessage
 		Dim status As AppEnums.StatusMessage = StatusMessage.Success
 

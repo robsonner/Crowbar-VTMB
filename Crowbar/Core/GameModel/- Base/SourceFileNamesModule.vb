@@ -1,4 +1,4 @@
-﻿Imports System.IO
+Imports System.IO
 
 Module SourceFileNamesModule
 
@@ -240,11 +240,14 @@ Module SourceFileNamesModule
 		Return animationSmdRelativePathFileName
 	End Function
 
-	Public Function GetVrdFileName(ByVal modelName As String) As String
+	Public Function GetVrdFileName(ByVal modelName As String, Optional ByVal version As Integer = 0) As String
 		Dim vrdFileName As String
 
-		vrdFileName = modelName
-		vrdFileName += ".vrd"
+		If version = 2531 Then
+			vrdFileName = modelName + "_bones.txt"
+		Else
+			vrdFileName = modelName + ".vrd"
+		End If
 
 		Return vrdFileName
 	End Function
