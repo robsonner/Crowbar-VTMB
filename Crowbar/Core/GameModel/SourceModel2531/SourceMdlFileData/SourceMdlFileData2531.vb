@@ -324,6 +324,7 @@ Public Class SourceMdlFileData2531
 	Public theFlexRules As List(Of SourceMdlFlexRule)
 	Public theHitboxSets As List(Of SourceMdlHitboxSet2531)
 	Public theIncludeModels As List(Of SourceMdlIncludeModel2531)
+	Public theMouths As List(Of SourceMdlMouth)
 	'Public theNodes As List(Of SourceMdlNode2531)
 	Public thePoseParamDescs As List(Of SourceMdlPoseParamDesc2531)
 	'Public theSequenceGroupFileHeaders As List(Of SourceMdlSequenceGroupFileHeader2531)

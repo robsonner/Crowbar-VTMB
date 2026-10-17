@@ -441,6 +441,7 @@ Public Class SourceModel2531
 		'NOTE: This must be after flex descs are read so that flex desc usage can be saved in flex desc.
 		mdlFile.ReadFlexRules()
 		mdlFile.ReadPoseParamDescs()
+		mdlFile.ReadMouths()
 
 		mdlFile.ReadTextures()
 		mdlFile.ReadTexturePaths()

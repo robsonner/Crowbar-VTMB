@@ -1295,6 +1295,38 @@ Public Class SourceMdlFile2531
 		End If
 	End Sub
 
+	Public Sub ReadMouths()
+		If Me.theMdlFileData.mouthCount > 0 Then
+			Dim fileOffsetStart As Long
+			Dim fileOffsetEnd As Long
+
+			Try
+				Me.theInputFileReader.BaseStream.Seek(Me.theMdlFileData.mouthOffset, SeekOrigin.Begin)
+				fileOffsetStart = Me.theInputFileReader.BaseStream.Position
+
+				Me.theMdlFileData.theMouths = New List(Of SourceMdlMouth)(Me.theMdlFileData.mouthCount)
+				For i As Integer = 0 To Me.theMdlFileData.mouthCount - 1
+					Dim aMouth As New SourceMdlMouth()
+					aMouth.boneIndex = Me.theInputFileReader.ReadInt32()
+					aMouth.forward.x = Me.theInputFileReader.ReadSingle()
+					aMouth.forward.y = Me.theInputFileReader.ReadSingle()
+					aMouth.forward.z = Me.theInputFileReader.ReadSingle()
+					aMouth.flexDescIndex = Me.theInputFileReader.ReadInt32()
+					Me.theMdlFileData.theMouths.Add(aMouth)
+				Next
+
+				If Me.theMdlFileData.theMouths.Count > 0 Then
+					Me.theMdlFileData.theBodyParts(0).theModelCommandIsUsed = True
+				End If
+
+				fileOffsetEnd = Me.theInputFileReader.BaseStream.Position - 1
+				Me.theMdlFileData.theFileSeekLog.Add(fileOffsetStart, fileOffsetEnd, "theMdlFileData.theMouths")
+			Catch ex As Exception
+				Dim debug As Integer = 4242
+			End Try
+		End If
+	End Sub
+
 	Public Sub ReadSequenceGroups()
 		If Me.theMdlFileData.sequenceGroupCount > 0 Then
 			'Dim boneInputFileStreamPosition As Long
@@ -1417,6 +1449,9 @@ Public Class SourceMdlFile2531
 								meshVertexIndexStart = Me.theMdlFileData.theBodyParts(bodyPartIndex).theModels(modelIndex).theMeshes(meshIndex).vertexIndexStart
 
 								If aMesh.theFlexes IsNot Nothing AndAlso aMesh.theFlexes.Count > 0 Then
+									aBodyPart.theModelCommandIsUsed = True
+									Me.theMdlFileData.theModelCommandIsUsed = True
+
 									For flexIndex As Integer = 0 To aMesh.theFlexes.Count - 1
 										aFlex = aMesh.theFlexes(flexIndex)
 

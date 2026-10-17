@@ -167,15 +167,78 @@ Public Class SourceQcFile2531
 		End If
 	End Sub
 
+	Public Delegate Sub WriteGroupDelegate()
+
+	Public Sub WriteGroup(ByVal qciGroupName As String, ByVal writeGroupAction As WriteGroupDelegate, ByVal includeLineIsCommented As Boolean, ByVal includeLineIsIndented As Boolean)
+		If TheApp.Settings.DecompileGroupIntoQciFilesIsChecked Then
+			Dim qciFileName As String
+			Dim qciPathFileName As String
+			Dim mainOutputFileStream As StreamWriter
+
+			mainOutputFileStream = Me.theOutputFileStreamWriter
+
+			Try
+				qciFileName = Me.theOutputFileNameWithoutExtension + "_" + qciGroupName + ".qci"
+				qciPathFileName = Path.Combine(Me.theOutputPath, qciFileName)
+
+				Me.theOutputFileStreamWriter = File.CreateText(qciPathFileName)
+
+				writeGroupAction.Invoke()
+			Catch ex As Exception
+				Throw
+			Finally
+				If Me.theOutputFileStreamWriter IsNot Nothing Then
+					Me.theOutputFileStreamWriter.Flush()
+					Me.theOutputFileStreamWriter.Close()
+
+					Me.theOutputFileStreamWriter = mainOutputFileStream
+				End If
+			End Try
+
+			Try
+				If File.Exists(qciPathFileName) Then
+					Dim qciFileInfo As New FileInfo(qciPathFileName)
+					If qciFileInfo.Length > 0 Then
+						Dim line As String = ""
+
+						Me.theOutputFileStreamWriter.WriteLine()
+
+						If includeLineIsCommented Then
+							line += "// "
+						End If
+						If includeLineIsIndented Then
+							line += vbTab
+						End If
+						If TheApp.Settings.DecompileQcUseMixedCaseForKeywordsIsChecked Then
+							line += "$Include "
+						Else
+							line += "$include "
+						End If
+						line += """"
+						line += qciFileName
+						line += """"
+						Me.theOutputFileStreamWriter.WriteLine(line)
+					End If
+				End If
+			Catch ex As Exception
+				Throw
+			End Try
+		Else
+			writeGroupAction.Invoke()
+		End If
+	End Sub
+
 	Public Sub WriteModelCommand(ByVal aBodyPart As SourceMdlBodyPart2531)
 		Dim line As String = ""
 		Dim bodyPartIndex As Integer
 		Dim aBodyModel As SourceMdlModel2531
+		Dim eyeballNames As List(Of String)
 
 		If aBodyPart.theModels Is Nothing OrElse aBodyPart.theModels.Count = 0 Then
 			Exit Sub
 		End If
 
+		eyeballNames = New List(Of String)()
 		aBodyModel = aBodyPart.theModels(0)
 		bodyPartIndex = Me.theMdlFileData.theBodyParts.IndexOf(aBodyPart)
 		aBodyModel.theSmdFileNames(0) = SourceFileNamesModule.CreateBodyGroupSmdFileName(aBodyModel.theSmdFileNames(0), bodyPartIndex, 0, 0, Me.theModelName, aBodyModel.theName)
@@ -194,14 +257,22 @@ Public Class SourceQcFile2531
 		Me.theOutputFileStreamWriter.WriteLine(line)
 
 		If aBodyModel.theEyeballs IsNot Nothing AndAlso aBodyModel.theEyeballs.Count > 0 Then
-			Me.WriteEyeballLines(aBodyModel)
+			Me.WriteEyeballLines(aBodyModel, eyeballNames)
+			Me.WriteEyelidLines(aBodyPart, aBodyModel, eyeballNames)
 		End If
+
+		If bodyPartIndex = 0 Then
+			Me.WriteMouthLines()
+		End If
+
+		Me.theBodyPartForFlexWriting = aBodyPart
+		Me.WriteGroup("flex", AddressOf WriteGroupFlex, False, True)
 
 		line = "}"
 		Me.theOutputFileStreamWriter.WriteLine(line)
 	End Sub
 
-	Private Sub WriteEyeballLines(ByVal aBodyModel As SourceMdlModel2531)
+	Private Sub WriteEyeballLines(ByVal aBodyModel As SourceMdlModel2531, ByRef eyeballNames As List(Of String))
 		Dim line As String = ""
 		Dim anEyeball As SourceMdlEyeball2531
 		Dim eyeballTextureName As String
@@ -247,6 +318,7 @@ Public Class SourceQcFile2531
 			Else
 				eyeballName = "eye_" + eyeballIndex.ToString(TheApp.InternalNumberFormat)
 			End If
+			eyeballNames.Add(eyeballName)
 
 			' Resolve textures
 			eyeballTextureName = ""
@@ -345,7 +417,335 @@ Public Class SourceQcFile2531
 			line += """ "
 			line += Math.Round(irisScale, 6).ToString("0.######", TheApp.InternalNumberFormat)
 			Me.theOutputFileStreamWriter.WriteLine(line)
+
+			If anEyeball.upperLidFlexDesc >= 0 AndAlso anEyeball.upperLidFlexDesc < Me.theMdlFileData.theFlexDescs.Count Then
+				Me.theMdlFileData.theFlexDescs(anEyeball.upperLidFlexDesc).theDescIsUsedByEyelid = True
+			End If
+			If anEyeball.lowerLidFlexDesc >= 0 AndAlso anEyeball.lowerLidFlexDesc < Me.theMdlFileData.theFlexDescs.Count Then
+				Me.theMdlFileData.theFlexDescs(anEyeball.lowerLidFlexDesc).theDescIsUsedByEyelid = True
+			End If
 		Next
+	End Sub
+
+	Private Sub WriteEyelidLines(ByVal aBodyPart As SourceMdlBodyPart2531, ByVal aModel As SourceMdlModel2531, ByVal eyeballNames As List(Of String))
+		Dim line As String = ""
+		Dim bodyPartIndex As Integer
+		Dim anEyeball As SourceMdlEyeball2531
+		Dim frameIndex As Integer
+		Dim eyelidName As String
+		Dim aFlexFrame As FlexFrame2531
+
+		Try
+			bodyPartIndex = Me.theMdlFileData.theBodyParts.IndexOf(aBodyPart)
+			If aModel.theEyeballs IsNot Nothing AndAlso aModel.theEyeballs.Count > 0 AndAlso Me.theMdlFileData.theFlexFrames IsNot Nothing AndAlso Me.theMdlFileData.theFlexFrames.Count > 1 Then
+				line = ""
+				Me.theOutputFileStreamWriter.WriteLine(line)
+
+				For eyeballIndex As Integer = 0 To aModel.theEyeballs.Count - 1
+					anEyeball = aModel.theEyeballs(eyeballIndex)
+
+					If anEyeball.upperLidFlexDesc >= 0 AndAlso anEyeball.upperLidFlexDesc < Me.theMdlFileData.theFlexDescs.Count Then
+						eyelidName = Me.theMdlFileData.theFlexDescs(anEyeball.upperLidFlexDesc).theName
+
+						line = vbTab
+						line += "eyelid "
+						line += eyelidName
+						line += " """
+						line += SourceFileNamesModule.GetVtaFileName(Me.theModelName, bodyPartIndex)
+						line += """ "
+						line += "lowerer "
+
+						frameIndex = 0
+						For flexFrameIndex As Integer = 1 To Me.theMdlFileData.theFlexFrames.Count - 1
+							aFlexFrame = Me.theMdlFileData.theFlexFrames(flexFrameIndex)
+							If aFlexFrame.flexName = eyelidName Then
+								If aFlexFrame.flexes(0).target0 = -11 Then
+									frameIndex = flexFrameIndex
+									Exit For
+								End If
+							End If
+						Next
+						line += frameIndex.ToString(TheApp.InternalNumberFormat)
+						line += " "
+						line += anEyeball.upperTarget(0).ToString("0.##", TheApp.InternalNumberFormat)
+						line += " neutral 0 "
+						line += anEyeball.upperTarget(1).ToString("0.##", TheApp.InternalNumberFormat)
+						line += " raiser "
+
+						frameIndex = 0
+						For flexFrameIndex As Integer = 1 To Me.theMdlFileData.theFlexFrames.Count - 1
+							aFlexFrame = Me.theMdlFileData.theFlexFrames(flexFrameIndex)
+							If aFlexFrame.flexName = eyelidName Then
+								If aFlexFrame.flexes(0).target3 = 11 Then
+									frameIndex = flexFrameIndex
+									Exit For
+								End If
+							End If
+						Next
+						line += frameIndex.ToString(TheApp.InternalNumberFormat)
+						line += " "
+						line += anEyeball.upperTarget(2).ToString("0.##", TheApp.InternalNumberFormat)
+						line += " split "
+						line += Me.GetSplitNumber(eyelidName)
+						line += " eyeball """
+						If eyeballIndex < eyeballNames.Count Then
+							line += eyeballNames(eyeballIndex)
+						Else
+							line += "eye_" + eyeballIndex.ToString(TheApp.InternalNumberFormat)
+						End If
+						line += """"
+						Me.theOutputFileStreamWriter.WriteLine(line)
+
+						Me.theMdlFileData.theFlexDescs(anEyeball.upperLidFlexDesc).theDescIsUsedByFlex = True
+						If anEyeball.upperFlexDesc(0) >= 0 AndAlso anEyeball.upperFlexDesc(0) < Me.theMdlFileData.theFlexDescs.Count Then
+							Me.theMdlFileData.theFlexDescs(anEyeball.upperFlexDesc(0)).theDescIsUsedByFlex = True
+						End If
+						If anEyeball.upperFlexDesc(1) >= 0 AndAlso anEyeball.upperFlexDesc(1) < Me.theMdlFileData.theFlexDescs.Count Then
+							Me.theMdlFileData.theFlexDescs(anEyeball.upperFlexDesc(1)).theDescIsUsedByFlex = True
+						End If
+						If anEyeball.upperFlexDesc(2) >= 0 AndAlso anEyeball.upperFlexDesc(2) < Me.theMdlFileData.theFlexDescs.Count Then
+							Me.theMdlFileData.theFlexDescs(anEyeball.upperFlexDesc(2)).theDescIsUsedByFlex = True
+						End If
+					End If
+
+					If anEyeball.lowerLidFlexDesc >= 0 AndAlso anEyeball.lowerLidFlexDesc < Me.theMdlFileData.theFlexDescs.Count Then
+						eyelidName = Me.theMdlFileData.theFlexDescs(anEyeball.lowerLidFlexDesc).theName
+
+						line = vbTab
+						line += "eyelid "
+						line += eyelidName
+						line += " """
+						line += SourceFileNamesModule.GetVtaFileName(Me.theModelName, bodyPartIndex)
+						line += """ "
+						line += "lowerer "
+
+						frameIndex = 0
+						For flexFrameIndex As Integer = 1 To Me.theMdlFileData.theFlexFrames.Count - 1
+							aFlexFrame = Me.theMdlFileData.theFlexFrames(flexFrameIndex)
+							If aFlexFrame.flexName = eyelidName Then
+								If aFlexFrame.flexes(0).target0 = -11 Then
+									frameIndex = flexFrameIndex
+									Exit For
+								End If
+							End If
+						Next
+						line += frameIndex.ToString(TheApp.InternalNumberFormat)
+						line += " "
+						line += anEyeball.lowerTarget(0).ToString("0.##", TheApp.InternalNumberFormat)
+						line += " neutral 0 "
+						line += anEyeball.lowerTarget(1).ToString("0.##", TheApp.InternalNumberFormat)
+						line += " raiser "
+
+						frameIndex = 0
+						For flexFrameIndex As Integer = 1 To Me.theMdlFileData.theFlexFrames.Count - 1
+							aFlexFrame = Me.theMdlFileData.theFlexFrames(flexFrameIndex)
+							If aFlexFrame.flexName = eyelidName Then
+								If aFlexFrame.flexes(0).target3 = 11 Then
+									frameIndex = flexFrameIndex
+									Exit For
+								End If
+							End If
+						Next
+						line += frameIndex.ToString(TheApp.InternalNumberFormat)
+						line += " "
+						line += anEyeball.lowerTarget(2).ToString("0.##", TheApp.InternalNumberFormat)
+						line += " split "
+						line += Me.GetSplitNumber(eyelidName)
+						line += " eyeball """
+						If eyeballIndex < eyeballNames.Count Then
+							line += eyeballNames(eyeballIndex)
+						Else
+							line += "eye_" + eyeballIndex.ToString(TheApp.InternalNumberFormat)
+						End If
+						line += """"
+						Me.theOutputFileStreamWriter.WriteLine(line)
+
+						Me.theMdlFileData.theFlexDescs(anEyeball.lowerLidFlexDesc).theDescIsUsedByFlex = True
+						If anEyeball.lowerFlexDesc(0) >= 0 AndAlso anEyeball.lowerFlexDesc(0) < Me.theMdlFileData.theFlexDescs.Count Then
+							Me.theMdlFileData.theFlexDescs(anEyeball.lowerFlexDesc(0)).theDescIsUsedByFlex = True
+						End If
+						If anEyeball.lowerFlexDesc(1) >= 0 AndAlso anEyeball.lowerFlexDesc(1) < Me.theMdlFileData.theFlexDescs.Count Then
+							Me.theMdlFileData.theFlexDescs(anEyeball.lowerFlexDesc(1)).theDescIsUsedByFlex = True
+						End If
+						If anEyeball.lowerFlexDesc(2) >= 0 AndAlso anEyeball.lowerFlexDesc(2) < Me.theMdlFileData.theFlexDescs.Count Then
+							Me.theMdlFileData.theFlexDescs(anEyeball.lowerFlexDesc(2)).theDescIsUsedByFlex = True
+						End If
+					End If
+				Next
+			End If
+		Catch ex As Exception
+			Dim debug As Integer = 4242
+		End Try
+	End Sub
+
+	Private Function GetSplitNumber(ByVal eyelidName As String) As String
+		If eyelidName.Contains("right") Then
+			Return "1"
+		ElseIf eyelidName.Contains("left") Then
+			Return "-1"
+		Else
+			Return "0"
+		End If
+	End Function
+
+	Private Sub WriteMouthLines()
+		Dim line As String = ""
+		Dim offsetX As Double
+		Dim offsetY As Double
+		Dim offsetZ As Double
+
+		If Me.theMdlFileData.theMouths IsNot Nothing AndAlso Me.theMdlFileData.theMouths.Count > 0 Then
+			line = ""
+			Me.theOutputFileStreamWriter.WriteLine(line)
+
+			For i As Integer = 0 To Me.theMdlFileData.theMouths.Count - 1
+				Dim aMouth As SourceMdlMouth
+				aMouth = Me.theMdlFileData.theMouths(i)
+				offsetX = Math.Round(aMouth.forward.x, 3)
+				offsetY = Math.Round(aMouth.forward.y, 3)
+				offsetZ = Math.Round(aMouth.forward.z, 3)
+
+				line = vbTab
+				line += "mouth "
+				line += i.ToString(TheApp.InternalNumberFormat)
+				line += " """
+				If aMouth.flexDescIndex >= 0 AndAlso aMouth.flexDescIndex < Me.theMdlFileData.theFlexDescs.Count Then
+					line += Me.theMdlFileData.theFlexDescs(aMouth.flexDescIndex).theName
+				Else
+					line += "mouth"
+				End If
+				line += """ """
+				If aMouth.boneIndex >= 0 AndAlso aMouth.boneIndex < Me.theMdlFileData.theBones.Count Then
+					line += Me.theMdlFileData.theBones(aMouth.boneIndex).theName
+				Else
+					line += "head"
+				End If
+				line += """ "
+				line += offsetX.ToString("0.######", TheApp.InternalNumberFormat)
+				line += " "
+				line += offsetY.ToString("0.######", TheApp.InternalNumberFormat)
+				line += " "
+				line += offsetZ.ToString("0.######", TheApp.InternalNumberFormat)
+				Me.theOutputFileStreamWriter.WriteLine(line)
+
+				If aMouth.flexDescIndex >= 0 AndAlso aMouth.flexDescIndex < Me.theMdlFileData.theFlexDescs.Count Then
+					Me.theMdlFileData.theFlexDescs(aMouth.flexDescIndex).theDescIsUsedByFlex = True
+				End If
+			Next
+		End If
+	End Sub
+
+	Private Sub WriteGroupFlex()
+		If Me.theMdlFileData.theFlexFrames IsNot Nothing AndAlso Me.theMdlFileData.theFlexFrames.Count > 1 Then
+			Me.WriteFlexLines()
+			Me.WriteFlexControllerLines()
+			Me.WriteFlexRuleLines()
+		End If
+	End Sub
+
+	Private Sub WriteFlexLines()
+		Dim line As String = ""
+		Dim bodyPartIndex As Integer
+		bodyPartIndex = Me.theMdlFileData.theBodyParts.IndexOf(Me.theBodyPartForFlexWriting)
+		If bodyPartIndex < 0 Then
+			bodyPartIndex = 0
+		End If
+
+		line = ""
+		Me.theOutputFileStreamWriter.WriteLine(line)
+
+		line = vbTab
+		line += "flexfile"
+		line += " """
+		line += SourceFileNamesModule.GetVtaFileName(Me.theModelName, bodyPartIndex)
+		line += """ "
+		Me.theOutputFileStreamWriter.WriteLine(line)
+
+		line = vbTab
+		line += "{"
+		Me.theOutputFileStreamWriter.WriteLine(line)
+
+		line = vbTab
+		line += vbTab
+		line += "defaultflex frame 0"
+		Me.theOutputFileStreamWriter.WriteLine(line)
+
+		Dim aFlexFrame As FlexFrame2531
+		For frameIndex As Integer = 1 To Me.theMdlFileData.theFlexFrames.Count - 1
+			aFlexFrame = Me.theMdlFileData.theFlexFrames(frameIndex)
+			line = vbTab
+			line += vbTab
+			If Me.theMdlFileData.theFlexDescs(aFlexFrame.flexes(0).flexDescIndex).theDescIsUsedByEyelid Then
+				line += "// Already in eyelid lines: "
+			End If
+			line += "flex """
+			line += aFlexFrame.flexName
+			line += """"
+			line += " frame "
+			line += CStr(frameIndex)
+			Me.theOutputFileStreamWriter.WriteLine(line)
+		Next
+
+		line = vbTab
+		line += "}"
+		Me.theOutputFileStreamWriter.WriteLine(line)
+	End Sub
+
+	Private Sub WriteFlexControllerLines()
+		Dim line As String = ""
+
+		If Me.theMdlFileData.theFlexControllers IsNot Nothing AndAlso Me.theMdlFileData.theFlexControllers.Count > 0 Then
+			Dim aFlexController As SourceMdlFlexController
+
+			line = ""
+			Me.theOutputFileStreamWriter.WriteLine(line)
+
+			For i As Integer = 0 To Me.theMdlFileData.theFlexControllers.Count - 1
+				aFlexController = Me.theMdlFileData.theFlexControllers(i)
+
+				line = vbTab
+				line += "flexcontroller "
+				line += aFlexController.theType
+				line += " "
+				line += "range "
+				line += aFlexController.min.ToString("0.######", TheApp.InternalNumberFormat)
+				line += " "
+				line += aFlexController.max.ToString("0.######", TheApp.InternalNumberFormat)
+				line += " """
+				line += aFlexController.theName
+				line += """"
+				Me.theOutputFileStreamWriter.WriteLine(line)
+			Next
+		End If
+	End Sub
+
+	Private Sub WriteFlexRuleLines()
+		Dim line As String = ""
+
+		If Me.theMdlFileData.theFlexRules IsNot Nothing AndAlso Me.theMdlFileData.theFlexRules.Count > 0 Then
+			Dim aFlexRule As SourceMdlFlexRule
+
+			line = ""
+			Me.theOutputFileStreamWriter.WriteLine(line)
+
+			For i As Integer = 0 To Me.theMdlFileData.theFlexDescs.Count - 1
+				Dim flexDesc As SourceMdlFlexDesc
+				flexDesc = Me.theMdlFileData.theFlexDescs(i)
+
+				If Not flexDesc.theDescIsUsedByFlex AndAlso flexDesc.theDescIsUsedByFlexRule Then
+					line = vbTab
+					line += "localvar "
+					line += flexDesc.theName
+					Me.theOutputFileStreamWriter.WriteLine(line)
+				End If
+			Next
+
+			For i As Integer = 0 To Me.theMdlFileData.theFlexRules.Count - 1
+				aFlexRule = Me.theMdlFileData.theFlexRules(i)
+				line = Common.GetFlexRule(Me.theMdlFileData.theFlexDescs, Me.theMdlFileData.theFlexControllers, aFlexRule)
+				Me.theOutputFileStreamWriter.WriteLine(line)
+			Next
+		End If
 	End Sub
 
 	Public Sub WriteCBoxCommand()
@@ -1393,6 +1793,8 @@ Public Class SourceQcFile2531
 
 	Private theOutputPath As String
 	Private theOutputFileNameWithoutExtension As String
+
+	Private theBodyPartForFlexWriting As SourceMdlBodyPart2531
 
 #End Region
 
