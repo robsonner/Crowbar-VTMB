@@ -1026,15 +1026,63 @@ Module MathModule
 
 		'NOTE: Not completely correct.
 		Return MathModule.Eul_FromQuat(q, 0, 1, 2, 0, EulerParity.Even, EulerRepeat.No, EulerFrame.S)
-		'NOTE: Incorrect.
-		'Return MathModule.Eul_FromQuat(q, 1, 2, 0, 0, EulerParity.Even, EulerRepeat.No, EulerFrame.S)
-		'Return MathModule.Eul_FromQuat(q, 2, 0, 1, 0, EulerParity.Even, EulerRepeat.No, EulerFrame.S)
-
-		'NOTE: Incorrect.
-		'Return MathModule.Eul_FromQuat(q, 0, 1, 2, 0, EulerParity.Odd, EulerRepeat.No, EulerFrame.S)
-		'Return MathModule.Eul_FromQuat(q, 1, 2, 0, 0, EulerParity.Odd, EulerRepeat.No, EulerFrame.S)
-		'Return MathModule.Eul_FromQuat(q, 2, 0, 1, 0, EulerParity.Odd, EulerRepeat.No, EulerFrame.S)
 	End Function
+
+	Public Function MatrixToEulerAngles2531(ByVal M(,) As Double) As SourceVector
+		Return MathModule.Eul_FromHMatrix(M, 0, 1, 2, 0, EulerParity.Even, EulerRepeat.No, EulerFrame.S)
+	End Function
+
+	Public Function EulerAnglesToMatrix2531(ByVal ea As SourceVector) As Double(,)
+		Dim M(3, 3) As Double
+		Dim ti As Double = ea.x
+		Dim tj As Double = ea.y
+		Dim th As Double = ea.z
+		Dim ci As Double = Math.Cos(ti)
+		Dim cj As Double = Math.Cos(tj)
+		Dim ch As Double = Math.Cos(th)
+		Dim si As Double = Math.Sin(ti)
+		Dim sj As Double = Math.Sin(tj)
+		Dim sh As Double = Math.Sin(th)
+		Dim cc As Double = ci * ch
+		Dim cs As Double = ci * sh
+		Dim sc As Double = si * ch
+		Dim ss As Double = si * sh
+
+		M(0, 0) = cj * ch
+		M(0, 1) = sj * sc - cs
+		M(0, 2) = sj * cc + ss
+
+		M(1, 0) = cj * sh
+		M(1, 1) = sj * ss + cc
+		M(1, 2) = sj * cs - sc
+
+		M(2, 0) = -sj
+		M(2, 1) = cj * si
+		M(2, 2) = cj * ci
+
+		Return M
+	End Function
+
+	Public Function Matrix3x3Multiply(ByVal A(,) As Double, ByVal B(,) As Double) As Double(,)
+		Dim C(3, 3) As Double
+		For r As Integer = 0 To 2
+			For col As Integer = 0 To 2
+				C(r, col) = A(r, 0) * B(0, col) + A(r, 1) * B(1, col) + A(r, 2) * B(2, col)
+			Next
+		Next
+		Return C
+	End Function
+
+	Public Function Matrix3x3Transpose(ByVal M(,) As Double) As Double(,)
+		Dim T(3, 3) As Double
+		For r As Integer = 0 To 2
+			For col As Integer = 0 To 2
+				T(r, col) = M(col, r)
+			Next
+		Next
+		Return T
+	End Function
+
 
 	'FROM: http://www.euclideanspace.com/maths/geometry/rotations/conversions/quaternionToEuler/indexLocal.htm
 	'double sqw = q1.w*q1.w;

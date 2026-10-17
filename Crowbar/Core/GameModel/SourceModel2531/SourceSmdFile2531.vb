@@ -780,6 +780,11 @@ Public Class SourceSmdFile2531
 
 		s = 0
 
+		Dim worldRotations As New Dictionary(Of Integer, Double(,))()
+		Dim identityMatrix(3, 3) As Double
+		identityMatrix(0, 0) = 1.0 : identityMatrix(1, 1) = 1.0 : identityMatrix(2, 2) = 1.0
+		worldRotations(-1) = identityMatrix
+
 		For boneIndex As Integer = 0 To Me.theMdlFileData.theBones.Count - 1
 			aBone = Me.theMdlFileData.theBones(boneIndex)
 			anAnimation = anAnimationDesc.theAnimations(boneIndex)
@@ -796,11 +801,41 @@ Public Class SourceSmdFile2531
 				rot = CalcBoneRotation(frameIndex, s, aBone, anAnimation, aFrameLine.rotationQuat)
 				aFrameLine.rotation = New SourceVector()
 
-				aFrameLine.rotation.x = rot.x
-				aFrameLine.rotation.y = rot.y
-				aFrameLine.rotation.z = rot.z
+				Dim parentWorldMatrix As Double(,) = identityMatrix
+				If worldRotations.ContainsKey(aBone.parentBoneIndex) Then
+					parentWorldMatrix = worldRotations(aBone.parentBoneIndex)
+				End If
 
-				aFrameLine.rotation.debug_text = rot.debug_text
+				If (aBone.flags And 2) <> 0 Then
+					' Root-space rotation bone (branch 0x02 in engine.dll:FUN_20009fc0):
+					' The RLE animation stream contains rotation in model/root space (R_mdl).
+					' To write clean local Euler angles to SMD (which Blender expects):
+					' R_local = inv(R_parent_world) * R_mdl
+					Dim R_mdl As Double(,) = MathModule.EulerAnglesToMatrix2531(rot)
+					Dim invParentWorld As Double(,) = MathModule.Matrix3x3Transpose(parentWorldMatrix)
+					Dim R_local As Double(,) = MathModule.Matrix3x3Multiply(invParentWorld, R_mdl)
+					Dim rotLocal As SourceVector = MathModule.MatrixToEulerAngles2531(R_local)
+
+					aFrameLine.rotation.x = rotLocal.x
+					aFrameLine.rotation.y = rotLocal.y
+					aFrameLine.rotation.z = rotLocal.z
+					aFrameLine.rotation.debug_text = rot.debug_text
+
+					' Children of this bone inherit R_mdl as their parent world rotation
+					worldRotations(boneIndex) = R_mdl
+				Else
+					aFrameLine.rotation.x = rot.x
+					aFrameLine.rotation.y = rot.y
+					aFrameLine.rotation.z = rot.z
+					aFrameLine.rotation.debug_text = rot.debug_text
+
+					If aBone.parentBoneIndex = -1 Then
+						worldRotations(boneIndex) = identityMatrix
+					Else
+						Dim R_local As Double(,) = MathModule.EulerAnglesToMatrix2531(rot)
+						worldRotations(boneIndex) = MathModule.Matrix3x3Multiply(parentWorldMatrix, R_local)
+					End If
+				End If
 
 				pos = Me.CalcBonePosition(frameIndex, s, aBone, anAnimation)
 				aFrameLine.position = New SourceVector()
