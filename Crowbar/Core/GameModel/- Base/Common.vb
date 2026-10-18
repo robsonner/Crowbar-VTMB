@@ -1,4 +1,4 @@
-﻿Imports System.IO
+Imports System.IO
 
 Module Common
 
@@ -98,24 +98,24 @@ Module Common
 					End If
 				ElseIf aFlexOp.op = SourceMdlFlexOp.STUDIO_MUL Then
 					Dim rightIntermediate As IntermediateExpression = stack.Pop()
-					If rightIntermediate.thePrecedence < 2 Then
+					If rightIntermediate.thePrecedence < 3 Then
 						rightExpr = "(" + Convert.ToString(rightIntermediate.theExpression) + ")"
 					Else
 						rightExpr = rightIntermediate.theExpression
 					End If
 
 					Dim leftIntermediate As IntermediateExpression = stack.Pop()
-					If leftIntermediate.thePrecedence < 2 Then
+					If leftIntermediate.thePrecedence < 3 Then
 						leftExpr = "(" + Convert.ToString(leftIntermediate.theExpression) + ")"
 					Else
 						leftExpr = leftIntermediate.theExpression
 					End If
 
 					Dim newExpr As String = leftExpr + " * " + rightExpr
-					stack.Push(New IntermediateExpression(newExpr, 2))
+					stack.Push(New IntermediateExpression(newExpr, 3))
 				ElseIf aFlexOp.op = SourceMdlFlexOp.STUDIO_DIV Then
 					Dim rightIntermediate As IntermediateExpression = stack.Pop()
-					If rightIntermediate.thePrecedence < 2 Then
+					If rightIntermediate.thePrecedence < 10 Then
 						rightExpr = "(" + Convert.ToString(rightIntermediate.theExpression) + ")"
 					Else
 						rightExpr = rightIntermediate.theExpression

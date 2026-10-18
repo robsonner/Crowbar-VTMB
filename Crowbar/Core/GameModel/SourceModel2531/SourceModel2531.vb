@@ -519,6 +519,7 @@ Public Class SourceModel2531
 			qcFile.WriteHBoxRelatedCommands()
 
 			qcFile.WriteControllerCommand()
+			qcFile.WritePoseParameterCommand()
 
 			'qcFile.WriteSequenceGroupCommands()
 			qcFile.WriteSequenceCommands()

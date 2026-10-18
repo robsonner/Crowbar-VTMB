@@ -1788,6 +1788,35 @@ Public Class SourceQcFile2531
 		'End If
 	End Sub
 
+	Public Sub WritePoseParameterCommand()
+		Dim line As String = ""
+
+		If Me.theMdlFileData.thePoseParamDescs IsNot Nothing AndAlso Me.theMdlFileData.thePoseParamDescs.Count > 0 Then
+			line = ""
+			Me.theOutputFileStreamWriter.WriteLine(line)
+
+			For i As Integer = 0 To Me.theMdlFileData.thePoseParamDescs.Count - 1
+				Dim aPoseParamDesc As SourceMdlPoseParamDesc2531
+				aPoseParamDesc = Me.theMdlFileData.thePoseParamDescs(i)
+				If TheApp.Settings.DecompileQcUseMixedCaseForKeywordsIsChecked Then
+					line = "$PoseParameter """
+				Else
+					line = "$poseparameter """
+				End If
+				line += aPoseParamDesc.theName
+				line += """ "
+				line += aPoseParamDesc.startingValue.ToString("0.######", TheApp.InternalNumberFormat)
+				line += " "
+				line += aPoseParamDesc.endingValue.ToString("0.######", TheApp.InternalNumberFormat)
+				If (aPoseParamDesc.flags And 1) <> 0 OrElse aPoseParamDesc.loopingRange > 0 Then
+					line += " loop "
+					line += aPoseParamDesc.loopingRange.ToString("0.######", TheApp.InternalNumberFormat)
+				End If
+				Me.theOutputFileStreamWriter.WriteLine(line)
+			Next
+		End If
+	End Sub
+
 #End Region
 
 #Region "Constants"
