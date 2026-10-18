@@ -1414,101 +1414,88 @@ Public Class SourceMdlFile2531
 
 		Me.theMdlFileData.theFlexFrames = New List(Of FlexFrame2531)()
 
-		'NOTE: Create the defaultflex.
+		'NOTE: Create the defaultflex at index 0.
 		aFlexFrame = New FlexFrame2531()
 		Me.theMdlFileData.theFlexFrames.Add(aFlexFrame)
 
 		If Me.theMdlFileData.theFlexDescs IsNot Nothing AndAlso Me.theMdlFileData.theFlexDescs.Count > 0 Then
-			'Dim flexDescToMeshIndexes As List(Of List(Of Integer))
-			Dim flexDescToFlexFrames As List(Of List(Of FlexFrame2531))
 			Dim meshVertexIndexStart As Integer
 
-			'flexDescToMeshIndexes = New List(Of List(Of Integer))(Me.theMdlFileData.theFlexDescs.Count)
-			'For x As Integer = 0 To Me.theMdlFileData.theFlexDescs.Count - 1
-			'	Dim meshIndexList As New List(Of Integer)()
-			'	flexDescToMeshIndexes.Add(meshIndexList)
-			'Next
+			' NOTE: Outer loop iterates strictly in the order of theFlexDescs (0 .. Count - 1)
+			For flexDescIndex As Integer = 0 To Me.theMdlFileData.theFlexDescs.Count - 1
+				Dim framesForThisDesc As New List(Of FlexFrame2531)()
 
-			flexDescToFlexFrames = New List(Of List(Of FlexFrame2531))(Me.theMdlFileData.theFlexDescs.Count)
-			For x As Integer = 0 To Me.theMdlFileData.theFlexDescs.Count - 1
-				Dim flexFrameList As New List(Of FlexFrame2531)()
-				flexDescToFlexFrames.Add(flexFrameList)
-			Next
+				For bodyPartIndex As Integer = 0 To Me.theMdlFileData.theBodyParts.Count - 1
+					aBodyPart = Me.theMdlFileData.theBodyParts(bodyPartIndex)
 
-			For bodyPartIndex As Integer = 0 To Me.theMdlFileData.theBodyParts.Count - 1
-				aBodyPart = Me.theMdlFileData.theBodyParts(bodyPartIndex)
+					If aBodyPart.theModels IsNot Nothing AndAlso aBodyPart.theModels.Count > 0 Then
+						For modelIndex As Integer = 0 To aBodyPart.theModels.Count - 1
+							aModel = aBodyPart.theModels(modelIndex)
 
-				If aBodyPart.theModels IsNot Nothing AndAlso aBodyPart.theModels.Count > 0 Then
-					For modelIndex As Integer = 0 To aBodyPart.theModels.Count - 1
-						aModel = aBodyPart.theModels(modelIndex)
+							If aModel.theMeshes IsNot Nothing AndAlso aModel.theMeshes.Count > 0 Then
+								For meshIndex As Integer = 0 To aModel.theMeshes.Count - 1
+									aMesh = aModel.theMeshes(meshIndex)
 
-						If aModel.theMeshes IsNot Nothing AndAlso aModel.theMeshes.Count > 0 Then
-							For meshIndex As Integer = 0 To aModel.theMeshes.Count - 1
-								aMesh = aModel.theMeshes(meshIndex)
+									meshVertexIndexStart = Me.theMdlFileData.theBodyParts(bodyPartIndex).theModels(modelIndex).theMeshes(meshIndex).vertexIndexStart
 
-								meshVertexIndexStart = Me.theMdlFileData.theBodyParts(bodyPartIndex).theModels(modelIndex).theMeshes(meshIndex).vertexIndexStart
+									If aMesh.theFlexes IsNot Nothing AndAlso aMesh.theFlexes.Count > 0 Then
+										aBodyPart.theModelCommandIsUsed = True
+										Me.theMdlFileData.theModelCommandIsUsed = True
 
-								If aMesh.theFlexes IsNot Nothing AndAlso aMesh.theFlexes.Count > 0 Then
-									aBodyPart.theModelCommandIsUsed = True
-									Me.theMdlFileData.theModelCommandIsUsed = True
+										For flexIndex As Integer = 0 To aMesh.theFlexes.Count - 1
+											aFlex = aMesh.theFlexes(flexIndex)
 
-									For flexIndex As Integer = 0 To aMesh.theFlexes.Count - 1
-										aFlex = aMesh.theFlexes(flexIndex)
+											If aFlex.flexDescIndex = flexDescIndex Then
+												aFlexFrame = Nothing
+												For x As Integer = 0 To framesForThisDesc.Count - 1
+													searchedFlexFrame = framesForThisDesc(x)
+													If searchedFlexFrame.flexes(0).target0 = aFlex.target0 _
+													 AndAlso searchedFlexFrame.flexes(0).target1 = aFlex.target1 _
+													 AndAlso searchedFlexFrame.flexes(0).target2 = aFlex.target2 _
+													 AndAlso searchedFlexFrame.flexes(0).target3 = aFlex.target3 Then
+														' Add to an existing FlexFrame2531.
+														aFlexFrame = searchedFlexFrame
+														Exit For
+													End If
+												Next
 
-										aFlexFrame = Nothing
-										If flexDescToFlexFrames(aFlex.flexDescIndex) IsNot Nothing Then
-											For x As Integer = 0 To flexDescToFlexFrames(aFlex.flexDescIndex).Count - 1
-												searchedFlexFrame = flexDescToFlexFrames(aFlex.flexDescIndex)(x)
-												If searchedFlexFrame.flexes(0).target0 = aFlex.target0 _
-												 AndAlso searchedFlexFrame.flexes(0).target1 = aFlex.target1 _
-												 AndAlso searchedFlexFrame.flexes(0).target2 = aFlex.target2 _
-												 AndAlso searchedFlexFrame.flexes(0).target3 = aFlex.target3 Then
-													' Add to an existing FlexFrame2531.
-													aFlexFrame = searchedFlexFrame
-													Exit For
+												If aFlexFrame Is Nothing Then
+													aFlexFrame = New FlexFrame2531()
+													aFlexFrame.bodyAndMeshVertexIndexStarts = New List(Of Integer)()
+													aFlexFrame.flexes = New List(Of SourceMdlFlex2531)()
+
+													aFlexFrame.flexName = Me.theMdlFileData.theFlexDescs(aFlex.flexDescIndex).theName
+													aFlexFrame.flexDescription = aFlexFrame.flexName
+													aFlexFrame.flexHasPartner = False
+													Me.theMdlFileData.theFlexDescs(aFlex.flexDescIndex).theDescIsUsedByFlex = True
+
+													framesForThisDesc.Add(aFlexFrame)
 												End If
-											Next
-										End If
-										If aFlexFrame Is Nothing Then
-											aFlexFrame = New FlexFrame2531()
-											Me.theMdlFileData.theFlexFrames.Add(aFlexFrame)
-											aFlexFrame.bodyAndMeshVertexIndexStarts = New List(Of Integer)()
-											aFlexFrame.flexes = New List(Of SourceMdlFlex2531)()
 
-											'Dim aFlexDescPartnerIndex As Integer
-											'aFlexDescPartnerIndex = aMesh.theFlexes(flexIndex).flexDescPartnerIndex
+												aFlexFrame.bodyAndMeshVertexIndexStarts.Add(meshVertexIndexStart)
+												aFlexFrame.flexes.Add(aFlex)
+											End If
+										Next
+									End If
+								Next
+							End If
+						Next
+					End If
+				Next
 
-											aFlexFrame.flexName = Me.theMdlFileData.theFlexDescs(aFlex.flexDescIndex).theName
-											'If aFlexDescPartnerIndex > 0 Then
-											'	'line += "flexpair """
-											'	'aFlexFrame.flexName = aFlexFrame.flexName.Remove(aFlexFrame.flexName.Length - 1, 1)
-											'	aFlexFrame.flexDescription = aFlexFrame.flexName
-											'	aFlexFrame.flexDescription += "+"
-											'	aFlexFrame.flexDescription += Me.theMdlFileData.theFlexDescs(aFlex.flexDescPartnerIndex).theName
-											'	aFlexFrame.flexHasPartner = True
-											'	aFlexFrame.flexSplit = Me.GetSplit(aFlex, meshVertexIndexStart)
-											'	Me.theMdlFileData.theFlexDescs(aFlex.flexDescPartnerIndex).theDescIsUsedByFlex = True
-											'Else
-											'line += "flex """
-											aFlexFrame.flexDescription = aFlexFrame.flexName
-											aFlexFrame.flexHasPartner = False
-											'End If
-											Me.theMdlFileData.theFlexDescs(aFlex.flexDescIndex).theDescIsUsedByFlex = True
-
-											flexDescToFlexFrames(aFlex.flexDescIndex).Add(aFlexFrame)
-										End If
-
-										aFlexFrame.bodyAndMeshVertexIndexStarts.Add(meshVertexIndexStart)
-										aFlexFrame.flexes.Add(aFlex)
-
-										'flexDescToMeshIndexes(aFlex.flexDescIndex).Add(meshIndex)
-									Next
-								End If
-							Next
+				If framesForThisDesc.Count > 0 Then
+					framesForThisDesc.Sort(Function(a As FlexFrame2531, b As FlexFrame2531)
+						If a.flexes(0).target0 <> b.flexes(0).target0 Then
+							Return a.flexes(0).target0.CompareTo(b.flexes(0).target0)
+						ElseIf a.flexes(0).target1 <> b.flexes(0).target1 Then
+							Return a.flexes(0).target1.CompareTo(b.flexes(0).target1)
+						Else
+							Return 0
 						End If
-						'For x As Integer = 0 To Me.theMdlFileData.theFlexDescs.Count - 1
-						'	flexDescToMeshIndexes(x).Clear()
-						'Next
+					End Function)
+
+					For Each frame As FlexFrame2531 In framesForThisDesc
+						Me.theMdlFileData.theFlexFrames.Add(frame)
 					Next
 				End If
 			Next

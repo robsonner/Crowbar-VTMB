@@ -467,9 +467,9 @@ Public Class SourceQcFile2531
 						Next
 						line += frameIndex.ToString(TheApp.InternalNumberFormat)
 						line += " "
-						line += anEyeball.upperTarget(0).ToString("0.##", TheApp.InternalNumberFormat)
+						line += anEyeball.upperTarget(0).ToString("0.######", TheApp.InternalNumberFormat)
 						line += " neutral 0 "
-						line += anEyeball.upperTarget(1).ToString("0.##", TheApp.InternalNumberFormat)
+						line += anEyeball.upperTarget(1).ToString("0.######", TheApp.InternalNumberFormat)
 						line += " raiser "
 
 						frameIndex = 0
@@ -484,7 +484,7 @@ Public Class SourceQcFile2531
 						Next
 						line += frameIndex.ToString(TheApp.InternalNumberFormat)
 						line += " "
-						line += anEyeball.upperTarget(2).ToString("0.##", TheApp.InternalNumberFormat)
+						line += anEyeball.upperTarget(2).ToString("0.######", TheApp.InternalNumberFormat)
 						line += " split "
 						line += Me.GetSplitNumber(eyelidName)
 						line += " eyeball """
@@ -531,9 +531,9 @@ Public Class SourceQcFile2531
 						Next
 						line += frameIndex.ToString(TheApp.InternalNumberFormat)
 						line += " "
-						line += anEyeball.lowerTarget(0).ToString("0.##", TheApp.InternalNumberFormat)
+						line += anEyeball.lowerTarget(0).ToString("0.######", TheApp.InternalNumberFormat)
 						line += " neutral 0 "
-						line += anEyeball.lowerTarget(1).ToString("0.##", TheApp.InternalNumberFormat)
+						line += anEyeball.lowerTarget(1).ToString("0.######", TheApp.InternalNumberFormat)
 						line += " raiser "
 
 						frameIndex = 0
@@ -548,7 +548,7 @@ Public Class SourceQcFile2531
 						Next
 						line += frameIndex.ToString(TheApp.InternalNumberFormat)
 						line += " "
-						line += anEyeball.lowerTarget(2).ToString("0.##", TheApp.InternalNumberFormat)
+						line += anEyeball.lowerTarget(2).ToString("0.######", TheApp.InternalNumberFormat)
 						line += " split "
 						line += Me.GetSplitNumber(eyelidName)
 						line += " eyeball """
@@ -579,13 +579,8 @@ Public Class SourceQcFile2531
 	End Sub
 
 	Private Function GetSplitNumber(ByVal eyelidName As String) As String
-		If eyelidName.Contains("right") Then
-			Return "1"
-		ElseIf eyelidName.Contains("left") Then
-			Return "-1"
-		Else
-			Return "0"
-		End If
+		' In VTMB v2531, left and right eyelids are stored in separate VTA frames, so split is not needed (0)
+		Return "0"
 	End Function
 
 	Private Sub WriteMouthLines()
@@ -675,7 +670,8 @@ Public Class SourceQcFile2531
 			aFlexFrame = Me.theMdlFileData.theFlexFrames(frameIndex)
 			line = vbTab
 			line += vbTab
-			If Me.theMdlFileData.theFlexDescs(aFlexFrame.flexes(0).flexDescIndex).theDescIsUsedByEyelid Then
+			Dim currentFlex As SourceMdlFlex2531 = aFlexFrame.flexes(0)
+			If Me.theMdlFileData.theFlexDescs(currentFlex.flexDescIndex).theDescIsUsedByEyelid Then
 				line += "// Already in eyelid lines: "
 			End If
 			line += "flex """
@@ -683,6 +679,21 @@ Public Class SourceQcFile2531
 			line += """"
 			line += " frame "
 			line += CStr(frameIndex)
+
+			Dim isMultiStage As Boolean = False
+			If currentFlex.target1 <> 1.0 OrElse currentFlex.target2 <> 10.0 Then
+				isMultiStage = True
+			ElseIf frameIndex > 1 AndAlso Me.theMdlFileData.theFlexFrames(frameIndex - 1).flexes(0).flexDescIndex = currentFlex.flexDescIndex Then
+				isMultiStage = True
+			ElseIf frameIndex < Me.theMdlFileData.theFlexFrames.Count - 1 AndAlso Me.theMdlFileData.theFlexFrames(frameIndex + 1).flexes(0).flexDescIndex = currentFlex.flexDescIndex Then
+				isMultiStage = True
+			End If
+
+			If isMultiStage AndAlso Not Me.theMdlFileData.theFlexDescs(currentFlex.flexDescIndex).theDescIsUsedByEyelid Then
+				line += " position "
+				line += currentFlex.target1.ToString("0.######", TheApp.InternalNumberFormat)
+			End If
+
 			Me.theOutputFileStreamWriter.WriteLine(line)
 		Next
 
