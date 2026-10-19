@@ -1817,6 +1817,32 @@ Public Class SourceQcFile2531
 		End If
 	End Sub
 
+	Public Sub WritePhonemeFilterCommand()
+		Dim line As String = ""
+
+		' VTMB speech phoneme filter transition durations (client.dll:100c3ca1, 100c4674)
+		' phonemefilter_min (0xE8) and phonemefilter_max (0xEC)
+		If Me.theMdlFileData.phonemefilter_min > 0 OrElse Me.theMdlFileData.phonemefilter_max > 0 Then
+			line = ""
+			Me.theOutputFileStreamWriter.WriteLine(line)
+
+			If TheApp.Settings.DecompileDebugInfoFilesIsChecked Then
+				line = "// VTMB speech phoneme crossfade filter durations (min, max)"
+				Me.theOutputFileStreamWriter.WriteLine(line)
+			End If
+
+			If TheApp.Settings.DecompileQcUseMixedCaseForKeywordsIsChecked Then
+				line = "$PhonemeFilter "
+			Else
+				line = "$phonemefilter "
+			End If
+			line += Me.theMdlFileData.phonemefilter_min.ToString("0.###", TheApp.InternalNumberFormat)
+			line += " "
+			line += Me.theMdlFileData.phonemefilter_max.ToString("0.###", TheApp.InternalNumberFormat)
+			Me.theOutputFileStreamWriter.WriteLine(line)
+		End If
+	End Sub
+
 #End Region
 
 #Region "Constants"

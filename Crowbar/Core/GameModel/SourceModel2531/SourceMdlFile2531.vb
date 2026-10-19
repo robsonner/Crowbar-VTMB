@@ -67,8 +67,8 @@ Public Class SourceMdlFile2531
 
 		Me.theMdlFileData.flags = Me.theInputFileReader.ReadInt32()
 
-		Me.theMdlFileData.unknown04 = Me.theInputFileReader.ReadInt32()
-		Me.theMdlFileData.unknown05 = Me.theInputFileReader.ReadInt32()
+		Me.theMdlFileData.phonemefilter_min = Me.theInputFileReader.ReadSingle()
+		Me.theMdlFileData.phonemefilter_max = Me.theInputFileReader.ReadSingle()
 
 		Me.theMdlFileData.boneCount = Me.theInputFileReader.ReadInt32()
 		Me.theMdlFileData.boneOffset = Me.theInputFileReader.ReadInt32()

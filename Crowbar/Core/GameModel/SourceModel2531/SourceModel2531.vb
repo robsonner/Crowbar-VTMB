@@ -505,6 +505,7 @@ Public Class SourceModel2531
 			qcFile.WriteIllumPositionCommand()
 			qcFile.WriteEyePositionCommand()
 			qcFile.WriteSurfacePropCommand()
+			qcFile.WritePhonemeFilterCommand()
 
 			qcFile.WriteCdMaterialsCommand()
 			qcFile.WriteTextureGroupCommand()

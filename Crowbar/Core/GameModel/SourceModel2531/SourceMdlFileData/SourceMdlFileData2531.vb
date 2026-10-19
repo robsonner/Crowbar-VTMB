@@ -219,8 +219,11 @@ Public Class SourceMdlFileData2531
 
 	Public flags As Integer
 
-	Public unknown04 As Integer
-	Public unknown05 As Integer
+	' VTMB MDL v2531 speech phoneme crossfade filter durations (client.dll:100c3ca1, 100c3c83)
+	' Offset 0xE8 (232): Minimum transition duration in seconds (0.065 in Jack/male, 0.080 in female)
+	Public phonemefilter_min As Single
+	' Offset 0xEC (236): Maximum transition duration in seconds (0.100 in Jack/male/female)
+	Public phonemefilter_max As Single
 
 	Public boneCount As Integer
 	Public boneOffset As Integer
