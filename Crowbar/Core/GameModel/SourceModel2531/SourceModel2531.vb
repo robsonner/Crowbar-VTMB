@@ -530,6 +530,12 @@ Public Class SourceModel2531
 			qcFile.WriteCollisionTextCommand()
 		Catch ex As Exception
 			Dim debug As Integer = 4242
+			If Me.theOutputFileTextWriter IsNot Nothing Then
+				Me.theOutputFileTextWriter.WriteLine()
+				Me.theOutputFileTextWriter.WriteLine("// ERROR: Exception occurred during WriteQcFile: " + ex.Message)
+				Me.theOutputFileTextWriter.WriteLine("// " + ex.StackTrace.Replace(vbCrLf, vbCrLf + "// "))
+			End If
+			System.Diagnostics.Debug.WriteLine("WriteQcFile Exception: " + ex.ToString())
 		Finally
 		End Try
 	End Sub

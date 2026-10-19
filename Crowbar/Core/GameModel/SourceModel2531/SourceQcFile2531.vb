@@ -418,10 +418,10 @@ Public Class SourceQcFile2531
 			line += Math.Round(irisScale, 6).ToString("0.######", TheApp.InternalNumberFormat)
 			Me.theOutputFileStreamWriter.WriteLine(line)
 
-			If anEyeball.upperLidFlexDesc >= 0 AndAlso anEyeball.upperLidFlexDesc < Me.theMdlFileData.theFlexDescs.Count Then
+			If Me.theMdlFileData.theFlexDescs IsNot Nothing AndAlso anEyeball.upperLidFlexDesc >= 0 AndAlso anEyeball.upperLidFlexDesc < Me.theMdlFileData.theFlexDescs.Count Then
 				Me.theMdlFileData.theFlexDescs(anEyeball.upperLidFlexDesc).theDescIsUsedByEyelid = True
 			End If
-			If anEyeball.lowerLidFlexDesc >= 0 AndAlso anEyeball.lowerLidFlexDesc < Me.theMdlFileData.theFlexDescs.Count Then
+			If Me.theMdlFileData.theFlexDescs IsNot Nothing AndAlso anEyeball.lowerLidFlexDesc >= 0 AndAlso anEyeball.lowerLidFlexDesc < Me.theMdlFileData.theFlexDescs.Count Then
 				Me.theMdlFileData.theFlexDescs(anEyeball.lowerLidFlexDesc).theDescIsUsedByEyelid = True
 			End If
 		Next
@@ -437,7 +437,7 @@ Public Class SourceQcFile2531
 
 		Try
 			bodyPartIndex = Me.theMdlFileData.theBodyParts.IndexOf(aBodyPart)
-			If aModel.theEyeballs IsNot Nothing AndAlso aModel.theEyeballs.Count > 0 AndAlso Me.theMdlFileData.theFlexFrames IsNot Nothing AndAlso Me.theMdlFileData.theFlexFrames.Count > 1 Then
+			If aModel.theEyeballs IsNot Nothing AndAlso aModel.theEyeballs.Count > 0 AndAlso Me.theMdlFileData.theFlexFrames IsNot Nothing AndAlso Me.theMdlFileData.theFlexFrames.Count > 1 AndAlso Me.theMdlFileData.theFlexDescs IsNot Nothing Then
 				line = ""
 				Me.theOutputFileStreamWriter.WriteLine(line)
 
@@ -604,7 +604,7 @@ Public Class SourceQcFile2531
 				line += "mouth "
 				line += i.ToString(TheApp.InternalNumberFormat)
 				line += " """
-				If aMouth.flexDescIndex >= 0 AndAlso aMouth.flexDescIndex < Me.theMdlFileData.theFlexDescs.Count Then
+				If Me.theMdlFileData.theFlexDescs IsNot Nothing AndAlso aMouth.flexDescIndex >= 0 AndAlso aMouth.flexDescIndex < Me.theMdlFileData.theFlexDescs.Count Then
 					line += Me.theMdlFileData.theFlexDescs(aMouth.flexDescIndex).theName
 				Else
 					line += "mouth"
@@ -623,7 +623,7 @@ Public Class SourceQcFile2531
 				line += offsetZ.ToString("0.######", TheApp.InternalNumberFormat)
 				Me.theOutputFileStreamWriter.WriteLine(line)
 
-				If aMouth.flexDescIndex >= 0 AndAlso aMouth.flexDescIndex < Me.theMdlFileData.theFlexDescs.Count Then
+				If Me.theMdlFileData.theFlexDescs IsNot Nothing AndAlso aMouth.flexDescIndex >= 0 AndAlso aMouth.flexDescIndex < Me.theMdlFileData.theFlexDescs.Count Then
 					Me.theMdlFileData.theFlexDescs(aMouth.flexDescIndex).theDescIsUsedByFlex = True
 				End If
 			Next
@@ -671,7 +671,11 @@ Public Class SourceQcFile2531
 			line = vbTab
 			line += vbTab
 			Dim currentFlex As SourceMdlFlex2531 = aFlexFrame.flexes(0)
-			If Me.theMdlFileData.theFlexDescs(currentFlex.flexDescIndex).theDescIsUsedByEyelid Then
+			Dim currentFlexIsUsedByEyelid As Boolean = False
+			If Me.theMdlFileData.theFlexDescs IsNot Nothing AndAlso currentFlex.flexDescIndex >= 0 AndAlso currentFlex.flexDescIndex < Me.theMdlFileData.theFlexDescs.Count Then
+				currentFlexIsUsedByEyelid = Me.theMdlFileData.theFlexDescs(currentFlex.flexDescIndex).theDescIsUsedByEyelid
+			End If
+			If currentFlexIsUsedByEyelid Then
 				line += "// Already in eyelid lines: "
 			End If
 			line += "flex """
@@ -689,7 +693,7 @@ Public Class SourceQcFile2531
 				isMultiStage = True
 			End If
 
-			If isMultiStage AndAlso Not Me.theMdlFileData.theFlexDescs(currentFlex.flexDescIndex).theDescIsUsedByEyelid Then
+			If isMultiStage AndAlso Not currentFlexIsUsedByEyelid Then
 				line += " position "
 				line += currentFlex.target1.ToString("0.######", TheApp.InternalNumberFormat)
 			End If
@@ -733,7 +737,7 @@ Public Class SourceQcFile2531
 	Private Sub WriteFlexRuleLines()
 		Dim line As String = ""
 
-		If Me.theMdlFileData.theFlexRules IsNot Nothing AndAlso Me.theMdlFileData.theFlexRules.Count > 0 Then
+		If Me.theMdlFileData.theFlexRules IsNot Nothing AndAlso Me.theMdlFileData.theFlexRules.Count > 0 AndAlso Me.theMdlFileData.theFlexDescs IsNot Nothing Then
 			Dim aFlexRule As SourceMdlFlexRule
 
 			line = ""
@@ -1775,11 +1779,11 @@ Public Class SourceQcFile2531
 		line += Me.theMdlFileData.theAnimationDescs(anAnimDescIndex).fps.ToString("0.######", TheApp.InternalNumberFormat)
 		Me.theOutputFileStreamWriter.WriteLine(line)
 
-		'If (aSequenceDesc.flags And SourceMdlSequenceDesc2531.STUDIO_LOOPING) > 0 Then
-		'	line = vbTab
-		'	line += "loop"
-		'	Me.theOutputFileStreamWriter.WriteLine(line)
-		'End If
+		If (aSequenceDesc.flags And SourceMdlAnimationDesc.STUDIO_LOOPING) > 0 Then
+			line = vbTab
+			line += "loop"
+			Me.theOutputFileStreamWriter.WriteLine(line)
+		End If
 
 		'If aSequenceDesc.motiontype > 0 Then
 		'	line = vbTab

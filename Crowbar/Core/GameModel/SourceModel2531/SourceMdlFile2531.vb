@@ -1126,6 +1126,8 @@ Public Class SourceMdlFile2531
 
 			'fileOffsetEnd = Me.theInputFileReader.BaseStream.Position - 1
 			'Me.theMdlFileData.theFileSeekLog.Add(fileOffsetStart, fileOffsetEnd, "theMdlFileData.theFlexDescs")
+		Else
+			Me.theMdlFileData.theFlexDescs = New List(Of SourceMdlFlexDesc)()
 		End If
 	End Sub
 
