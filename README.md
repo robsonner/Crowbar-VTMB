@@ -1,15 +1,18 @@
-# Crowbar
- Crowbar - GoldSource and Source Engine Modding Tool
- 
- [Website](https://steamcommunity.com/groups/CrowbarTool)
- 
- IMPORTANT: When providing link to Crowbar, please only use the above website link, because that page provides info and links to everything related to Crowbar.
+# Crowbar-VTMB
+Crowbar-VTMB - GoldSource and Source Engine Modding Tool (VTMB Edition)
 
-# Building
-I currently build via Visual Basic in Visual Studio Community 2017.
-I use Debug x86 when debugging and Release x86 when releasing to public.
+## About Crowbar-VTMB
+Crowbar-VTMB is a modified version of Crowbar originally created by ZeqMacaw.
+* **Original Author:** ZeqMacaw
+* **Modified by:** robsonner
+* **Original License:** Creative Commons Attribution-ShareAlike 3.0 Unported (CC BY-SA 3.0)
+* **License Link:** [https://creativecommons.org/licenses/by-sa/3.0/deed.en_US](https://creativecommons.org/licenses/by-sa/3.0/deed.en_US)
 
-I tested building in Visual Studio Community 2019 on 15-Apr-2021. All I had to change were the settings from Debug Any CPU and Release Any CPU to Debug x86 and Release x86 at the top in the default toolbars.
+> **Disclaimer:** The original author (ZeqMacaw) does not endorse, sponsor, or officially support this modified version. All support requests, issues, and inquiries regarding Crowbar-VTMB should be directed to the repository maintainers, not to the original author.
+
+Original Crowbar Website: [Crowbar Steam Community Group](https://steamcommunity.com/groups/CrowbarTool)
+
+IMPORTANT: When providing links to the original Crowbar, please only use the above website link, as that page provides info and links to everything related to official Crowbar releases.
 
 ## Building via Command Line (Visual Studio 2022 / modern MSBuild):
 Always specify `/p:TargetFrameworkVersion=v4.8` to target modern .NET Framework 4.8:

@@ -1,7 +1,14 @@
 This work is licensed under the Creative Commons Attribution-ShareAlike 3.0 Unported License. 
-To view a copy of this license, visit http://creativecommons.org/licenses/by-sa/3.0/deed.en_US.
+To view a copy of this license, visit https://creativecommons.org/licenses/by-sa/3.0/deed.en_US.
 
-Title of Work: Crowbar
+Title of Work: Crowbar-VTMB (modified version of Crowbar)
+Original Author (credit): ZeqMacaw
+Modified by: robsonner
+
+Notice: The original author (ZeqMacaw) does not endorse, sponsor, or officially support this modified version.
+
+--- Original Work Attribution & Guidelines ---
+Title of Original Work: Crowbar
 Attribute work to (credit): ZeqMacaw
 
 If you do make edits and release them, please use a different name than Crowbar 

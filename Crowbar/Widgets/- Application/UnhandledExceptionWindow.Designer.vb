@@ -94,7 +94,7 @@ Partial Class UnhandledExceptionWindow
 		Me.Name = "UnhandledExceptionWindow"
 		Me.ShowInTaskbar = False
 		Me.StartPosition = System.Windows.Forms.FormStartPosition.CenterParent
-		Me.Text = "Crowbar Internal Error"
+		Me.Text = "Crowbar-VTMB Internal Error"
 		Me.ResumeLayout(False)
 		Me.PerformLayout()
 

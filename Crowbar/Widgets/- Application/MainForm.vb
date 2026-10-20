@@ -319,6 +319,10 @@ Public Class MainForm
 		End If
 	End Sub
 
+	Private Sub AboutCrowbarToolStripMenuItem_Click(sender As Object, e As EventArgs) Handles AboutCrowbarToolStripMenuItem.Click, AboutCrowbarToolStripMenuItem1.Click, AboutCrowbarToolStripMenuItem2.Click
+		Me.MainTabControl.SelectTab(Me.AboutTabPage)
+	End Sub
+
 #End Region
 
 #Region "Core Event Handlers"

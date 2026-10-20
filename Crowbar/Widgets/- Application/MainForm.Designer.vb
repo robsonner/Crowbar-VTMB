@@ -77,7 +77,7 @@ Partial Class MainForm
 		'
 		Me.AboutCrowbarToolStripMenuItem.Name = "AboutCrowbarToolStripMenuItem"
 		Me.AboutCrowbarToolStripMenuItem.Size = New System.Drawing.Size(147, 22)
-		Me.AboutCrowbarToolStripMenuItem.Text = "About Crowbar"
+		Me.AboutCrowbarToolStripMenuItem.Text = "About Crowbar-VTMB"
 		'
 		'ToolStripMenuItem1
 		'
@@ -90,7 +90,7 @@ Partial Class MainForm
 		'
 		Me.AboutCrowbarToolStripMenuItem1.Name = "AboutCrowbarToolStripMenuItem1"
 		Me.AboutCrowbarToolStripMenuItem1.Size = New System.Drawing.Size(155, 22)
-		Me.AboutCrowbarToolStripMenuItem1.Text = "About Crowbar"
+		Me.AboutCrowbarToolStripMenuItem1.Text = "About Crowbar-VTMB"
 		'
 		'MainTabControl
 		'
@@ -362,7 +362,7 @@ Partial Class MainForm
 		'
 		Me.AboutCrowbarToolStripMenuItem2.Name = "AboutCrowbarToolStripMenuItem2"
 		Me.AboutCrowbarToolStripMenuItem2.Size = New System.Drawing.Size(152, 22)
-		Me.AboutCrowbarToolStripMenuItem2.Text = "About Crowbar"
+		Me.AboutCrowbarToolStripMenuItem2.Text = "About Crowbar-VTMB"
 		'
 		'MainForm
 		'
@@ -374,7 +374,7 @@ Partial Class MainForm
 		Me.Icon = CType(resources.GetObject("$this.Icon"), System.Drawing.Icon)
 		Me.MinimumSize = New System.Drawing.Size(800, 600)
 		Me.Name = "MainForm"
-		Me.Text = "Crowbar"
+		Me.Text = "Crowbar-VTMB"
 		Me.MainTabControl.ResumeLayout(False)
 		Me.SetUpGamesTabPage.ResumeLayout(False)
 		Me.DownloadTabPage.ResumeLayout(False)

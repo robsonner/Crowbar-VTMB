@@ -1,4 +1,4 @@
-﻿Imports System.Resources
+Imports System.Resources
 
 Imports System
 Imports System.Reflection
@@ -10,11 +10,11 @@ Imports System.Runtime.InteropServices
 
 ' Review the values of the assembly attributes
 
-<Assembly: AssemblyTitle("Crowbar")> 
-<Assembly: AssemblyDescription("Source Engine Modding Tool")> 
+<Assembly: AssemblyTitle("Crowbar-VTMB")> 
+<Assembly: AssemblyDescription("Source Engine Modding Tool (VTMB Edition)")> 
 <Assembly: AssemblyCompany("ZeqMacaw")> 
-<Assembly: AssemblyProduct("Crowbar")>
-<Assembly: AssemblyCopyright("Copyright 2023")>
+<Assembly: AssemblyProduct("Crowbar-VTMB")>
+<Assembly: AssemblyCopyright("Copyright 2023 ZeqMacaw, 2026 robsonner")>
 <Assembly: AssemblyTrademark("")> 
 
 <Assembly: ComVisible(False)> 
