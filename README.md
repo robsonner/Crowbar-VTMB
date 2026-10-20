@@ -3,6 +3,8 @@ Crowbar-VTMB - GoldSource and Source Engine Modding Tool (VTMB Edition)
 
 ## About Crowbar-VTMB
 Crowbar-VTMB is a modified version of Crowbar originally created by ZeqMacaw.
+* **Version:** v0.74-vtmb.1
+* **Release Notes:** [RELEASE_NOTES.md](RELEASE_NOTES.md)
 * **Original Author:** ZeqMacaw
 * **Modified by:** robsonner
 * **Original License:** Creative Commons Attribution-ShareAlike 3.0 Unported (CC BY-SA 3.0)
@@ -19,4 +21,4 @@ Always specify `/p:TargetFrameworkVersion=v4.8` to target modern .NET Framework 
 ```powershell
 & "C:\Program Files\Microsoft Visual Studio\18\Community\MSBuild\Current\Bin\MSBuild.exe" "Crowbar.sln" /p:Configuration=Release /p:Platform=x86 /p:TargetFrameworkVersion=v4.8 /t:Build
 ```
-Binary output: `Crowbar\bin\x86\Release\Crowbar.exe`
+Binary output: `Crowbar\bin\x86\Release\CrowbarVTMB.exe`

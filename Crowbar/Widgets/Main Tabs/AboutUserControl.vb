@@ -26,7 +26,7 @@ Public Class AboutUserControl
 
 		Dim infoText As New System.Text.StringBuilder()
 		infoText.AppendLine("Application: Crowbar-VTMB")
-		infoText.AppendLine("Version: " + My.Application.Info.Version.ToString(2) + " (v" + My.Application.Info.Version.ToString() + ")")
+		infoText.AppendLine("Version: 0.74-vtmb.1 (v" + My.Application.Info.Version.ToString() + ")")
 		infoText.AppendLine("Original author: ZeqMacaw")
 		infoText.AppendLine("Modified by: robsonner")
 		infoText.AppendLine("License: Creative Commons Attribution-ShareAlike 3.0 Unported (CC BY-SA 3.0)")

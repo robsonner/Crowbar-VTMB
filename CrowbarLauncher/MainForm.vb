@@ -1,4 +1,4 @@
-﻿Imports System.Collections.ObjectModel
+Imports System.Collections.ObjectModel
 Imports System.IO
 
 Public Class MainForm
@@ -7,7 +7,7 @@ Public Class MainForm
 		'TODO: Move new Crowbar.exe to where current Crowbar.exe is and then run the new Crowbar.exe.
 		Dim commandLineValues As New ReadOnlyCollection(Of String)(System.Environment.GetCommandLineArgs())
 		Dim startupPath As String = Application.StartupPath
-		Dim sourcePathFileName As String = Path.Combine(startupPath, "Crowbar.exe")
+		Dim sourcePathFileName As String = Path.Combine(startupPath, "CrowbarVTMB.exe")
 		Dim targetPathFileName As String = commandLineValues(2)
 
 		If commandLineValues.Count > 2 AndAlso commandLineValues(1) <> "" Then

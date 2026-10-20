@@ -1,4 +1,4 @@
-﻿Imports System.ComponentModel
+Imports System.ComponentModel
 Imports System.IO
 Imports System.Net
 Imports System.Web.Script.Serialization
@@ -280,12 +280,12 @@ Public Class Updater
 
 	'NOTE: This is run in a background thread.
 	Private Sub OpenNewVersion()
-		Dim newCrowbarPathFileName As String = Path.Combine(Me.theLocalPath, "Crowbar.exe")
+		Dim newCrowbarPathFileName As String = Path.Combine(Me.theLocalPath, "CrowbarVTMB.exe")
 		If File.Exists(newCrowbarPathFileName) Then
 			' Run CrowbarLauncher.exe and exit Crowbar.
 			Dim crowbarOrLauncherExeProcess As New Process()
 			Dim startupPath As String = Application.StartupPath
-			Dim currentCrowbarExePathFileName As String = Path.Combine(startupPath, "Crowbar.exe")
+			Dim currentCrowbarExePathFileName As String = Path.Combine(startupPath, "CrowbarVTMB.exe")
 
 			Try
 				crowbarOrLauncherExeProcess.StartInfo.UseShellExecute = False
