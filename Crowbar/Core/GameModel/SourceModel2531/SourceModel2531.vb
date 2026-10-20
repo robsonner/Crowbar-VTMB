@@ -501,7 +501,7 @@ Public Class SourceModel2531
 			qcFile.WriteProceduralBonesCommand()
 
 			qcFile.WriteStaticPropCommand()
-			'qcFile.WriteFlagsCommand()
+			qcFile.WriteFlagsCommand()
 			qcFile.WriteIllumPositionCommand()
 			qcFile.WriteEyePositionCommand()
 			qcFile.WriteSurfacePropCommand()

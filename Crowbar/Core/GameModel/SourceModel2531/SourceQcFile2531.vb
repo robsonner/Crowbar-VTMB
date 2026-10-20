@@ -929,19 +929,23 @@ Public Class SourceQcFile2531
 		Me.theOutputFileStreamWriter.WriteLine(line)
 	End Sub
 
-	'Public Sub WriteFlagsCommand()
-	'	Dim line As String = ""
+	Public Sub WriteFlagsCommand()
+		If Me.theMdlFileData.flags = 0 Then
+			Exit Sub
+		End If
 
-	'	Me.theOutputFileStreamWriter.WriteLine()
+		Dim line As String = ""
 
-	'If TheApp.Settings.DecompileQcUseMixedCaseForKeywordsIsChecked Then
-	'	line = "$Flags "
-	'Else
-	'	line = "$flags "
-	'End If
-	'	line += Me.theMdlFileData.flags.ToString(TheApp.InternalNumberFormat)
-	'	Me.theOutputFileStreamWriter.WriteLine(line)
-	'End Sub
+		Me.theOutputFileStreamWriter.WriteLine()
+
+		If TheApp.Settings.DecompileQcUseMixedCaseForKeywordsIsChecked Then
+			line = "$Flags "
+		Else
+			line = "$flags "
+		End If
+		line += Me.theMdlFileData.flags.ToString(TheApp.InternalNumberFormat)
+		Me.theOutputFileStreamWriter.WriteLine(line)
+	End Sub
 
 	Public Sub WriteHBoxRelatedCommands()
 		Dim line As String = ""
