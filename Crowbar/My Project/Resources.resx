@@ -165,7 +165,7 @@
     <value>http://steamcommunity.com/id/zeqmacaw</value>
   </data>
   <data name="About_ProductLink" xml:space="preserve">
-    <value>https://github.com/robsonner/Crowbar</value>
+    <value>https://github.com/robsonner/Crowbar-VTMB</value>
   </data>
   <data name="ErrorMessageSDKMissingCause" xml:space="preserve">
     <value>Possible causes: The game's SDK or Authoring Tools has not been installed (usually via Steam Library Tools) or the path given to Crowbar-VTMB (via Set Up Games button) is incorrect.</value>
