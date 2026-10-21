@@ -119,8 +119,8 @@ Public Class SourceMdlFile2531
 
 		Me.theMdlFileData.surfacePropOffset = Me.theInputFileReader.ReadInt32()
 
-		Me.theMdlFileData.unknownCount = Me.theInputFileReader.ReadInt32()
-		Me.theMdlFileData.unknownOffset = Me.theInputFileReader.ReadInt32()
+		Me.theMdlFileData.physicsChainCount = Me.theInputFileReader.ReadInt32()
+		Me.theMdlFileData.physicsChainOffset = Me.theInputFileReader.ReadInt32()
 
 		Me.theMdlFileData.includeModelCount = Me.theInputFileReader.ReadInt32()
 		Me.theMdlFileData.includeModelOffset = Me.theInputFileReader.ReadInt32()
@@ -1013,6 +1013,50 @@ Public Class SourceMdlFile2531
 
 				'fileOffsetEnd = Me.theInputFileReader.BaseStream.Position - 1
 				'Me.theMdlFileData.theFileSeekLog.Add(fileOffsetStart, fileOffsetEnd, "theMdlFileData.theIncludeModels")
+			Catch ex As Exception
+				Dim debug As Integer = 4242
+			End Try
+		End If
+	End Sub
+ 
+	Public Sub ReadPhysicsChains()
+		If Me.theMdlFileData.physicsChainCount > 0 AndAlso Me.theMdlFileData.physicsChainOffset > 0 Then
+			Dim fileOffsetStart As Long
+			Dim fileOffsetEnd As Long
+
+			Try
+				Me.theInputFileReader.BaseStream.Seek(Me.theMdlFileData.physicsChainOffset, SeekOrigin.Begin)
+
+				Me.theMdlFileData.thePhysicsChains = New List(Of SourceMdlPhysicsChain2531)(Me.theMdlFileData.physicsChainCount)
+				For i As Integer = 0 To Me.theMdlFileData.physicsChainCount - 1
+					fileOffsetStart = Me.theInputFileReader.BaseStream.Position
+					Dim aChain As New SourceMdlPhysicsChain2531()
+
+					aChain.boneIndex = Me.theInputFileReader.ReadInt32()
+					aChain.parentIndex = Me.theInputFileReader.ReadInt32()
+					aChain.param1 = Me.theInputFileReader.ReadSingle()
+					aChain.param2 = Me.theInputFileReader.ReadSingle()
+					aChain.param3 = Me.theInputFileReader.ReadSingle()
+					aChain.param4 = Me.theInputFileReader.ReadSingle()
+					aChain.param5 = Me.theInputFileReader.ReadSingle()
+
+					If Me.theMdlFileData.theBones IsNot Nothing AndAlso aChain.boneIndex >= 0 AndAlso aChain.boneIndex < Me.theMdlFileData.theBones.Count Then
+						aChain.theBoneName = Me.theMdlFileData.theBones(aChain.boneIndex).theName
+					Else
+						aChain.theBoneName = ""
+					End If
+
+					If Me.theMdlFileData.theBones IsNot Nothing AndAlso aChain.parentIndex >= 0 AndAlso aChain.parentIndex < Me.theMdlFileData.theBones.Count Then
+						aChain.theParentName = Me.theMdlFileData.theBones(aChain.parentIndex).theName
+					Else
+						aChain.theParentName = ""
+					End If
+
+					Me.theMdlFileData.thePhysicsChains.Add(aChain)
+
+					fileOffsetEnd = Me.theInputFileReader.BaseStream.Position - 1
+					Me.theMdlFileData.theFileSeekLog.Add(fileOffsetStart, fileOffsetEnd, "aPhysicsChain [" + aChain.theBoneName + "]")
+				Next
 			Catch ex As Exception
 				Dim debug As Integer = 4242
 			End Try

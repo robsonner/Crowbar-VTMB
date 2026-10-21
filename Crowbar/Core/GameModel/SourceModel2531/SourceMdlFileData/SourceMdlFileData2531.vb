@@ -274,8 +274,8 @@ Public Class SourceMdlFileData2531
 
 	Public surfacePropOffset As Integer
 
-	Public unknownCount As Integer
-	Public unknownOffset As Integer
+	Public physicsChainCount As Integer
+	Public physicsChainOffset As Integer
 
 	'Public localIkAutoPlayLockCount As Integer
 	'Public localIkAutoPlayLockOffset As Integer
@@ -328,6 +328,7 @@ Public Class SourceMdlFileData2531
 	Public theHitboxSets As List(Of SourceMdlHitboxSet2531)
 	Public theIncludeModels As List(Of SourceMdlIncludeModel2531)
 	Public theMouths As List(Of SourceMdlMouth)
+	Public thePhysicsChains As List(Of SourceMdlPhysicsChain2531)
 	'Public theNodes As List(Of SourceMdlNode2531)
 	Public thePoseParamDescs As List(Of SourceMdlPoseParamDesc2531)
 	'Public theSequenceGroupFileHeaders As List(Of SourceMdlSequenceGroupFileHeader2531)

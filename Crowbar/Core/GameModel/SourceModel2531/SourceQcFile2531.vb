@@ -1851,6 +1851,39 @@ Public Class SourceQcFile2531
 		End If
 	End Sub
 
+	Public Sub WritePhysicsChainCommands()
+		Dim line As String = ""
+
+		If Me.theMdlFileData.thePhysicsChains IsNot Nothing AndAlso Me.theMdlFileData.thePhysicsChains.Count > 0 Then
+			line = ""
+			Me.theOutputFileStreamWriter.WriteLine(line)
+
+			If TheApp.Settings.DecompileDebugInfoFilesIsChecked Then
+				line = "// VTMB procedural physics chains (bone, parent bone, update rate, gravity/force, damping, spring, cone angle)"
+				Me.theOutputFileStreamWriter.WriteLine(line)
+			End If
+
+			Dim keyword As String
+			If TheApp.Settings.DecompileQcUseMixedCaseForKeywordsIsChecked Then
+				keyword = "$PhysicsChain "
+			Else
+				keyword = "$physicschain "
+			End If
+
+			For Each aChain As SourceMdlPhysicsChain2531 In Me.theMdlFileData.thePhysicsChains
+				line = keyword
+				line += """" + aChain.theBoneName + """ "
+				line += """" + If(aChain.theParentName IsNot Nothing, aChain.theParentName, "") + """ "
+				line += aChain.param1.ToString("0.######", TheApp.InternalNumberFormat) + " "
+				line += aChain.param2.ToString("0.######", TheApp.InternalNumberFormat) + " "
+				line += aChain.param3.ToString("0.######", TheApp.InternalNumberFormat) + " "
+				line += aChain.param4.ToString("0.######", TheApp.InternalNumberFormat) + " "
+				line += aChain.param5.ToString("0.######", TheApp.InternalNumberFormat)
+				Me.theOutputFileStreamWriter.WriteLine(line)
+			Next
+		End If
+	End Sub
+
 #End Region
 
 #Region "Constants"

@@ -448,6 +448,7 @@ Public Class SourceModel2531
 		mdlFile.ReadSkins()
 
 		mdlFile.ReadIncludeModels()
+		mdlFile.ReadPhysicsChains()
 
 		mdlFile.ReadUnreadBytes()
 
@@ -506,6 +507,7 @@ Public Class SourceModel2531
 			qcFile.WriteEyePositionCommand()
 			qcFile.WriteSurfacePropCommand()
 			qcFile.WritePhonemeFilterCommand()
+			qcFile.WritePhysicsChainCommands()
 
 			qcFile.WriteCdMaterialsCommand()
 			qcFile.WriteTextureGroupCommand()
