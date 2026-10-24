@@ -365,11 +365,16 @@ Public Class SourceSmdFile2531
 
 			If aBodyModel.vertexListType = 0 Then
 				For i As Integer = 0 To aBodyModel.theVertexesType0(vertexIndex).boneIndex.Length - 1
-					weights.Add(aBodyModel.theVertexesType0(vertexIndex).weight(i) / 255)
-					If weights(i) > 0 Then
+					Dim aWeight As Double = aBodyModel.theVertexesType0(vertexIndex).weight(i) / 255.0R
+					If aWeight > 0 Then
+						weights.Add(aWeight)
 						boneIndexes.Add(aBodyModel.theVertexesType0(vertexIndex).boneIndex(i))
 					End If
 				Next
+				If boneIndexes.Count = 0 Then
+					boneIndexes.Add(0)
+					weights.Add(1.0R)
+				End If
 				position.x = aBodyModel.theVertexesType0(vertexIndex).position.x
 				position.y = aBodyModel.theVertexesType0(vertexIndex).position.y
 				position.z = aBodyModel.theVertexesType0(vertexIndex).position.z
