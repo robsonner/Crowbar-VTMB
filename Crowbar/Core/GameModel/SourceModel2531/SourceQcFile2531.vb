@@ -1958,12 +1958,55 @@ Public Class SourceQcFile2531
 							Next
 						End If
 
-						' 3. Cloth simulation mesh (do not emit $Cloth until Phase 3)
-						If aModel.unknown03(0) > 0 Then
-							If TheApp.Settings.DecompileDebugInfoFilesIsChecked Then
-								line = "// cloth block present (unknown03 count: " + aModel.unknown03(0).ToString() + ", offset: " + aModel.unknown03(1).ToString() + ", layout not yet decoded)"
+						' 3. Cloth simulation mesh ($Cloth)
+						If aModel.theClothMesh IsNot Nothing AndAlso aModel.theClothMesh.header IsNot Nothing Then
+							Dim aClothMesh As SourceMdlClothMesh2531 = aModel.theClothMesh
+							Dim matName As String = aClothMesh.theMeshMaterialName
+							If (String.IsNullOrEmpty(matName) OrElse matName.StartsWith("mesh_")) AndAlso _
+							   aClothMesh.theMeshIndex >= 0 AndAlso aModel.theMeshes IsNot Nothing AndAlso aClothMesh.theMeshIndex < aModel.theMeshes.Count Then
+								Dim matchedMesh As SourceMdlMesh2531 = aModel.theMeshes(aClothMesh.theMeshIndex)
+								If Me.theMdlFileData.theTextures IsNot Nothing AndAlso matchedMesh.materialIndex >= 0 AndAlso matchedMesh.materialIndex < Me.theMdlFileData.theTextures.Count Then
+									matName = Me.theMdlFileData.theTextures(matchedMesh.materialIndex).theFileName
+									aClothMesh.theMeshMaterialName = matName
+								End If
+							End If
+
+							If String.IsNullOrEmpty(matName) OrElse matName.StartsWith("mesh_") Then
+								line = "// WARNING: Cloth target mesh material name is ambiguous or missing texture (" + matName + ")"
 								Me.theOutputFileStreamWriter.WriteLine(line)
 							End If
+
+							If TheApp.Settings.DecompileDebugInfoFilesIsChecked Then
+								line = "// Cloth simulation block: " + aClothMesh.header.numNodes.ToString() + " nodes (" + _
+									   aClothMesh.header.numFixedNodes.ToString() + " fixed, " + _
+									   aClothMesh.header.numFreeNodes.ToString() + " free), " + _
+									   aClothMesh.header.numSprings.ToString() + " springs (" + _
+									   aClothMesh.header.numStructuralSprings.ToString() + " structural, " + _
+									   aClothMesh.header.numShearBendSprings.ToString() + " shear/bend)"
+								Me.theOutputFileStreamWriter.WriteLine(line)
+							End If
+
+							Dim keywordCloth As String = If(TheApp.Settings.DecompileQcUseMixedCaseForKeywordsIsChecked, "$Cloth ", "$cloth ")
+							line = keywordCloth + """" + matName + """"
+							Me.theOutputFileStreamWriter.WriteLine(line)
+							line = "{"
+							Me.theOutputFileStreamWriter.WriteLine(line)
+
+							If Not String.IsNullOrEmpty(modelBindingName) Then
+								line = vbTab + "model """ + modelBindingName + """"
+								Me.theOutputFileStreamWriter.WriteLine(line)
+							End If
+
+							line = vbTab + "stiffness " + aClothMesh.header.stiffness.ToString("0.######", TheApp.InternalNumberFormat)
+							Me.theOutputFileStreamWriter.WriteLine(line)
+
+							If Not String.IsNullOrEmpty(aClothMesh.fixedBoneName) Then
+								line = vbTab + "fixed_bone """ + aClothMesh.fixedBoneName + """"
+								Me.theOutputFileStreamWriter.WriteLine(line)
+							End If
+
+							line = "}"
+							Me.theOutputFileStreamWriter.WriteLine(line)
 						End If
 					Next
 				End If
