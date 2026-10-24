@@ -301,6 +301,7 @@
     <Compile Include="Core\GameModel\SourceModel2531\SourceMdlFileData\SourceMdlMesh2531.vb" />
     <Compile Include="Core\GameModel\SourceModel2531\SourceMdlFileData\SourceMdlModel2531.vb" />
     <Compile Include="Core\GameModel\SourceModel2531\SourceMdlFileData\SourceMdlPhysicsChain2531.vb" />
+    <Compile Include="Core\GameModel\SourceModel2531\SourceMdlFileData\SourceMdlCloth2531.vb" />
     <Compile Include="Core\GameModel\SourceModel2531\SourceMdlFileData\SourceMdlPoseParamDesc2531.vb" />
     <Compile Include="Core\GameModel\SourceModel2531\SourceMdlFileData\SourceMdlQuatInterpBone2531.vb" />
     <Compile Include="Core\GameModel\SourceModel2531\SourceMdlFileData\SourceMdlSequenceDesc2531.vb" />

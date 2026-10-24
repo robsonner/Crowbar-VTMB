@@ -99,6 +99,9 @@
 	Public theVertexesType0 As List(Of SourceMdlType0Vertex2531)
 	Public theVertexesType1 As List(Of SourceMdlType1Vertex2531)
 	Public theVertexesType2 As List(Of SourceMdlType2Vertex2531)
+	Public theClothCollisionCapsules As List(Of SourceMdlClothCollisionCapsule2531)
+	Public theClothConstraintCapsules As List(Of SourceMdlClothConstraintCapsule2531)
+	Public theClothMesh As SourceMdlClothMesh2531
 
 
 	'FROM: VAMPTools-master from atrblizzard\VAMPTools-master\MDLConverter\inc\external\studio.h

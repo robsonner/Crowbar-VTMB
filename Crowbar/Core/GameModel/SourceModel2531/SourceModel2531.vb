@@ -508,6 +508,7 @@ Public Class SourceModel2531
 			qcFile.WriteSurfacePropCommand()
 			qcFile.WritePhonemeFilterCommand()
 			qcFile.WritePhysicsChainCommands()
+			qcFile.WriteClothCommands()
 
 			qcFile.WriteCdMaterialsCommand()
 			qcFile.WriteTextureGroupCommand()

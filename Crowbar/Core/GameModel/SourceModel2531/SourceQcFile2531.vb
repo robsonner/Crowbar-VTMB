@@ -1884,6 +1884,93 @@ Public Class SourceQcFile2531
 		End If
 	End Sub
 
+	Public Sub WriteClothCommands()
+		Dim line As String = ""
+		Dim hasClothData As Boolean = False
+
+		If Me.theMdlFileData.theBodyParts IsNot Nothing Then
+			For Each aBodyPart As SourceMdlBodyPart2531 In Me.theMdlFileData.theBodyParts
+				If aBodyPart.theModels IsNot Nothing Then
+					For Each aModel As SourceMdlModel2531 In aBodyPart.theModels
+						If (aModel.theClothCollisionCapsules IsNot Nothing AndAlso aModel.theClothCollisionCapsules.Count > 0) OrElse _
+						   (aModel.theClothConstraintCapsules IsNot Nothing AndAlso aModel.theClothConstraintCapsules.Count > 0) OrElse _
+						   (aModel.unknown03(0) > 0) Then
+							hasClothData = True
+							Exit For
+						End If
+					Next
+				End If
+				If hasClothData Then Exit For
+			Next
+		End If
+
+		If hasClothData Then
+			Me.theOutputFileStreamWriter.WriteLine()
+			If TheApp.Settings.DecompileDebugInfoFilesIsChecked Then
+				line = "// VTMB interactive cloth simulation and collision capsules"
+				Me.theOutputFileStreamWriter.WriteLine(line)
+			End If
+
+			Dim keywordCollision As String = If(TheApp.Settings.DecompileQcUseMixedCaseForKeywordsIsChecked, "$CollisionCapsule ", "$collisioncapsule ")
+			Dim keywordConstraint As String = If(TheApp.Settings.DecompileQcUseMixedCaseForKeywordsIsChecked, "$ConstraintCapsule ", "$constraintcapsule ")
+
+			For Each aBodyPart As SourceMdlBodyPart2531 In Me.theMdlFileData.theBodyParts
+				If aBodyPart.theModels IsNot Nothing Then
+					For Each aModel As SourceMdlModel2531 In aBodyPart.theModels
+						Dim modelBindingName As String = If(aModel.theSmdFileNames IsNot Nothing AndAlso aModel.theSmdFileNames.Count > 0 AndAlso Not String.IsNullOrEmpty(aModel.theSmdFileNames(0)), aModel.theSmdFileNames(0), aModel.theName)
+
+						' 1. Collision capsules (e.g. thighs)
+						If aModel.theClothCollisionCapsules IsNot Nothing Then
+							For Each aCapsule As SourceMdlClothCollisionCapsule2531 In aModel.theClothCollisionCapsules
+								line = keywordCollision + """" + aCapsule.theBoneName + """ "
+								If Not String.IsNullOrEmpty(aCapsule.theBone2Name) AndAlso aCapsule.theBone2Name <> aCapsule.theBoneName Then
+									line += "bone2 """ + aCapsule.theBone2Name + """ "
+								End If
+								If Not String.IsNullOrEmpty(modelBindingName) Then
+									line += "model """ + modelBindingName + """ "
+								End If
+								line += "radius " + aCapsule.radius.ToString("0.######", TheApp.InternalNumberFormat) + " "
+								line += "pt1 " + aCapsule.pt1.x.ToString("0.######", TheApp.InternalNumberFormat) + " "
+								line += aCapsule.pt1.y.ToString("0.######", TheApp.InternalNumberFormat) + " "
+								line += aCapsule.pt1.z.ToString("0.######", TheApp.InternalNumberFormat) + " "
+								line += "pt2 " + aCapsule.pt2.x.ToString("0.######", TheApp.InternalNumberFormat) + " "
+								line += aCapsule.pt2.y.ToString("0.######", TheApp.InternalNumberFormat) + " "
+								line += aCapsule.pt2.z.ToString("0.######", TheApp.InternalNumberFormat)
+								Me.theOutputFileStreamWriter.WriteLine(line)
+							Next
+						End If
+
+						' 2. Constraint capsules (e.g. waist)
+						If aModel.theClothConstraintCapsules IsNot Nothing Then
+							For Each aConstraint As SourceMdlClothConstraintCapsule2531 In aModel.theClothConstraintCapsules
+								If aConstraint.boneIndex >= 0 AndAlso Me.theMdlFileData.theBones IsNot Nothing AndAlso aConstraint.boneIndex < Me.theMdlFileData.theBones.Count Then
+									line = keywordConstraint + """" + aConstraint.theBoneName + """ "
+									If Not String.IsNullOrEmpty(modelBindingName) Then
+										line += "model """ + modelBindingName + """ "
+									End If
+									line += "radius " + aConstraint.radius.ToString("0.######", TheApp.InternalNumberFormat) + " "
+									line += "pos " + aConstraint.position.x.ToString("0.######", TheApp.InternalNumberFormat) + " "
+									line += aConstraint.position.y.ToString("0.######", TheApp.InternalNumberFormat) + " "
+									line += aConstraint.position.z.ToString("0.######", TheApp.InternalNumberFormat)
+									line += " // NOTE: semantic of this field unverified (RE-FACTS §15: reserved=0)"
+									Me.theOutputFileStreamWriter.WriteLine(line)
+								End If
+							Next
+						End If
+
+						' 3. Cloth simulation mesh (do not emit $Cloth until Phase 3)
+						If aModel.unknown03(0) > 0 Then
+							If TheApp.Settings.DecompileDebugInfoFilesIsChecked Then
+								line = "// cloth block present (unknown03 count: " + aModel.unknown03(0).ToString() + ", offset: " + aModel.unknown03(1).ToString() + ", layout not yet decoded)"
+								Me.theOutputFileStreamWriter.WriteLine(line)
+							End If
+						End If
+					Next
+				End If
+			Next
+		End If
+	End Sub
+
 #End Region
 
 #Region "Constants"

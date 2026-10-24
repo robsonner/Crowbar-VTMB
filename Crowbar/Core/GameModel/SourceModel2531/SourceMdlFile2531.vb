@@ -1802,6 +1802,7 @@ Public Class SourceMdlFile2531
 						Me.ReadVertexesType2(modelInputFileStreamPosition, aModel)
 					End If
 					Me.ReadTangents(modelInputFileStreamPosition, aModel)
+					Me.ReadClothData(modelInputFileStreamPosition, aModel)
 
 					Me.theInputFileReader.BaseStream.Seek(inputFileStreamPosition, SeekOrigin.Begin)
 				Next
@@ -2388,6 +2389,75 @@ Public Class SourceMdlFile2531
 				Dim debug As Integer = 4242
 			End Try
 		End If
+	End Sub
+
+	Private Sub ReadClothData(ByVal modelInputFileStreamPosition As Long, ByVal aModel As SourceMdlModel2531)
+		Try
+			' 1. Collision Capsules (unknown01: 36 bytes per record)
+			If aModel.unknown01Count > 0 AndAlso aModel.unknown01Offset <> 0 Then
+				Dim capsuleOffset As Long = modelInputFileStreamPosition + aModel.unknown01Offset
+				Me.theInputFileReader.BaseStream.Seek(capsuleOffset, SeekOrigin.Begin)
+
+				aModel.theClothCollisionCapsules = New List(Of SourceMdlClothCollisionCapsule2531)(aModel.unknown01Count)
+				For i As Integer = 0 To aModel.unknown01Count - 1
+					Dim aCapsule As New SourceMdlClothCollisionCapsule2531()
+					aCapsule.boneIndex1 = Me.theInputFileReader.ReadInt32()
+					aCapsule.boneIndex2 = Me.theInputFileReader.ReadInt32()
+					aCapsule.radius = Me.theInputFileReader.ReadSingle()
+					aCapsule.pt1 = New SourceVector(Me.theInputFileReader.ReadSingle(), Me.theInputFileReader.ReadSingle(), Me.theInputFileReader.ReadSingle())
+					aCapsule.pt2 = New SourceVector(Me.theInputFileReader.ReadSingle(), Me.theInputFileReader.ReadSingle(), Me.theInputFileReader.ReadSingle())
+
+					If Me.theMdlFileData.theBones IsNot Nothing AndAlso aCapsule.boneIndex1 >= 0 AndAlso aCapsule.boneIndex1 < Me.theMdlFileData.theBones.Count Then
+						aCapsule.theBoneName = Me.theMdlFileData.theBones(aCapsule.boneIndex1).theName
+					Else
+						aCapsule.theBoneName = aCapsule.boneIndex1.ToString()
+					End If
+
+					If Me.theMdlFileData.theBones IsNot Nothing AndAlso aCapsule.boneIndex2 >= 0 AndAlso aCapsule.boneIndex2 < Me.theMdlFileData.theBones.Count Then
+						aCapsule.theBone2Name = Me.theMdlFileData.theBones(aCapsule.boneIndex2).theName
+					Else
+						aCapsule.theBone2Name = aCapsule.boneIndex2.ToString()
+					End If
+
+					aModel.theClothCollisionCapsules.Add(aCapsule)
+				Next
+			End If
+
+			' 2. Constraint Capsules (unknown02: 20 bytes per record)
+			If aModel.unknown02Count > 0 AndAlso aModel.unknown02Offset <> 0 Then
+				Dim constraintOffset As Long = modelInputFileStreamPosition + aModel.unknown02Offset
+				Me.theInputFileReader.BaseStream.Seek(constraintOffset, SeekOrigin.Begin)
+
+				aModel.theClothConstraintCapsules = New List(Of SourceMdlClothConstraintCapsule2531)(aModel.unknown02Count)
+				For i As Integer = 0 To aModel.unknown02Count - 1
+					Dim aConstraint As New SourceMdlClothConstraintCapsule2531()
+					aConstraint.boneIndex = Me.theInputFileReader.ReadInt32()
+					aConstraint.radius = Me.theInputFileReader.ReadSingle()
+					aConstraint.position = New SourceVector(Me.theInputFileReader.ReadSingle(), Me.theInputFileReader.ReadSingle(), Me.theInputFileReader.ReadSingle())
+
+					If Me.theMdlFileData.theBones IsNot Nothing AndAlso aConstraint.boneIndex >= 0 AndAlso aConstraint.boneIndex < Me.theMdlFileData.theBones.Count Then
+						aConstraint.theBoneName = Me.theMdlFileData.theBones(aConstraint.boneIndex).theName
+					Else
+						aConstraint.theBoneName = aConstraint.boneIndex.ToString()
+					End If
+
+					aModel.theClothConstraintCapsules.Add(aConstraint)
+				Next
+			End If
+
+			' 3. Cloth Simulation Mesh (unknown03: count = unknown03(0), offset = unknown03(1))
+			' Raw detection only until Phase 3 layout decoding is complete.
+			If aModel.unknown03(0) > 0 AndAlso aModel.unknown03(1) <> 0 Then
+				Dim clothOffset As Long = modelInputFileStreamPosition + aModel.unknown03(1)
+				If Me.theMdlFileData.theFileSeekLog IsNot Nothing Then
+					Me.theMdlFileData.theFileSeekLog.Add(clothOffset, clothOffset, "aModel.unknown03 cloth block detected (count: " + aModel.unknown03(0).ToString() + ", offset: " + aModel.unknown03(1).ToString() + ")")
+				End If
+			End If
+		Catch ex As Exception
+			If Me.theMdlFileData.theFileSeekLog IsNot Nothing Then
+				Me.theMdlFileData.theFileSeekLog.Add(Me.theInputFileReader.BaseStream.Position, Me.theInputFileReader.BaseStream.Position, "WARNING: Exception reading cloth data: " + ex.Message)
+			End If
+		End Try
 	End Sub
 
 	Private Sub ReadAnimations(ByVal animationDescInputFileStreamPosition As Long, ByVal anAnimationDesc As SourceMdlAnimationDesc2531)
