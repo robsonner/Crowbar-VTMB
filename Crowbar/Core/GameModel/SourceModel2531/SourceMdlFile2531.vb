@@ -2472,64 +2472,58 @@ Public Class SourceMdlFile2531
 				aClothMesh.header.subTable2Offset = Me.theInputFileReader.ReadInt32()
 				aClothMesh.header.subTable2Count = Me.theInputFileReader.ReadInt32()
 
-				' Spring records table at +0x34A0 (13,472 bytes in unknown03)
-				If aClothMesh.header.numSprings > 0 Then
-					Me.theInputFileReader.BaseStream.Seek(clothOffset + 13472, SeekOrigin.Begin)
+				Dim ediOffset As Long = clothOffset + 4
+				If aClothMesh.header.ptr0 > 0 Then
+					ediOffset = modelInputFileStreamPosition + aClothMesh.header.ptr0
+				End If
+
+				' 16-byte Spring records table at EDI + val1 (e.g. EDI + 484)
+				If aClothMesh.header.numSprings > 0 AndAlso aClothMesh.header.val1 > 0 Then
+					Me.theInputFileReader.BaseStream.Seek(ediOffset + aClothMesh.header.val1, SeekOrigin.Begin)
 					aClothMesh.theSprings = New List(Of SourceMdlClothSpring2531)(aClothMesh.header.numSprings)
 					For i As Integer = 0 To aClothMesh.header.numSprings - 1
 						Dim aSpring As New SourceMdlClothSpring2531()
 						aSpring.nodeA = Me.theInputFileReader.ReadUInt16()
 						aSpring.nodeB = Me.theInputFileReader.ReadUInt16()
+						Dim weightA As Single = Me.theInputFileReader.ReadSingle()
+						Dim weightB As Single = Me.theInputFileReader.ReadSingle()
+						Dim restLenSq As Single = Me.theInputFileReader.ReadSingle()
 						aClothMesh.theSprings.Add(aSpring)
 					Next
 				End If
 
-				' Node-to-Mesh vertex mapping table at +0x9154 (37,204 bytes in unknown03)
-				Dim maxNodeVertexIndex As Integer = -1
-				If aClothMesh.header.numNodes > 0 Then
-					Me.theInputFileReader.BaseStream.Seek(clothOffset + 37204, SeekOrigin.Begin)
+				' Global model vertex indices table at EDI + nodeTableOffset (EDI + 92)
+				If aClothMesh.header.numNodes > 0 AndAlso aClothMesh.header.nodeTableOffset > 0 Then
+					Me.theInputFileReader.BaseStream.Seek(ediOffset + aClothMesh.header.nodeTableOffset, SeekOrigin.Begin)
 					aClothMesh.theNodeMeshVertexIndices = New List(Of UShort)(aClothMesh.header.numNodes)
 					For i As Integer = 0 To aClothMesh.header.numNodes - 1
 						Dim vIdx As UShort = Me.theInputFileReader.ReadUInt16()
 						aClothMesh.theNodeMeshVertexIndices.Add(vIdx)
-						If CInt(vIdx) > maxNodeVertexIndex Then
-							maxNodeVertexIndex = CInt(vIdx)
-						End If
 					Next
 				End If
 
-				' Identify target mesh dynamically by vertex index range and bone weight overlap
+				' Identify target mesh dynamically by checking which mesh's global vertex range contains the cloth nodes
 				aClothMesh.theMeshIndex = -1
-				If aModel.theMeshes IsNot Nothing AndAlso aModel.theMeshes.Count > 0 AndAlso maxNodeVertexIndex >= 0 Then
+				If aModel.theMeshes IsNot Nothing AndAlso aModel.theMeshes.Count > 0 AndAlso aClothMesh.theNodeMeshVertexIndices IsNot Nothing AndAlso aClothMesh.theNodeMeshVertexIndices.Count > 0 Then
 					Dim bestMeshIndex As Integer = -1
-					Dim bestMeshScore As Double = -1.0
+					Dim bestMatchCount As Integer = 0
 
 					For mIdx As Integer = 0 To aModel.theMeshes.Count - 1
 						Dim candidateMesh As SourceMdlMesh2531 = aModel.theMeshes(mIdx)
-						' The target mesh must contain all referenced node vertex indices
-						If candidateMesh.vertexCount > maxNodeVertexIndex Then
-							' Score mesh based on total bone weight of fixed nodes
-							Dim currentScore As Double = 0.0
-							Dim numFixed As Integer = Math.Min(aClothMesh.header.numFixedNodes, aClothMesh.theNodeMeshVertexIndices.Count)
-							If aModel.theVertexesType0 IsNot Nothing Then
-								For f As Integer = 0 To numFixed - 1
-									Dim localIdx As Integer = CInt(aClothMesh.theNodeMeshVertexIndices(f))
-									Dim globalIdx As Integer = candidateMesh.vertexIndexStart + localIdx
-									If globalIdx >= 0 AndAlso globalIdx < aModel.theVertexesType0.Count Then
-										Dim vert As SourceMdlType0Vertex2531 = aModel.theVertexesType0(globalIdx)
-										For b As Integer = 0 To vert.weight.Length - 1
-											currentScore += CDbl(vert.weight(b))
-										Next
-									End If
-								Next
-							Else
-								currentScore = 1.0
-							End If
+						Dim vStart As Integer = candidateMesh.vertexIndexStart
+						Dim vEnd As Integer = vStart + candidateMesh.vertexCount
+						Dim matchCount As Integer = 0
 
-							If currentScore > bestMeshScore Then
-								bestMeshScore = currentScore
-								bestMeshIndex = mIdx
+						For i As Integer = 0 To aClothMesh.theNodeMeshVertexIndices.Count - 1
+							Dim globalIdx As Integer = CInt(aClothMesh.theNodeMeshVertexIndices(i))
+							If globalIdx >= vStart AndAlso globalIdx < vEnd Then
+								matchCount += 1
 							End If
+						Next
+
+						If matchCount > bestMatchCount Then
+							bestMatchCount = matchCount
+							bestMeshIndex = mIdx
 						End If
 					Next
 
@@ -2542,13 +2536,11 @@ Public Class SourceMdlFile2531
 							aClothMesh.theMeshMaterialName = "mesh_" + bestMeshIndex.ToString()
 						End If
 
-						' Determine anchoring fixed bone from fixed node weights
-						If aClothMesh.header.numFixedNodes > 0 AndAlso aModel.theVertexesType0 IsNot Nothing Then
+						' Determine root/fixed bone from the cloth nodes (global vertex indices directly, NO vertexIndexStart offset!)
+						If aModel.theVertexesType0 IsNot Nothing Then
 							Dim boneWeightsMap As New Dictionary(Of Integer, Double)()
-							Dim numFixed As Integer = Math.Min(aClothMesh.header.numFixedNodes, aClothMesh.theNodeMeshVertexIndices.Count)
-							For f As Integer = 0 To numFixed - 1
-								Dim localIdx As Integer = CInt(aClothMesh.theNodeMeshVertexIndices(f))
-								Dim globalIdx As Integer = matchedMesh.vertexIndexStart + localIdx
+							For i As Integer = 0 To aClothMesh.theNodeMeshVertexIndices.Count - 1
+								Dim globalIdx As Integer = CInt(aClothMesh.theNodeMeshVertexIndices(i))
 								If globalIdx >= 0 AndAlso globalIdx < aModel.theVertexesType0.Count Then
 									Dim vert As SourceMdlType0Vertex2531 = aModel.theVertexesType0(globalIdx)
 									For b As Integer = 0 To vert.boneIndex.Length - 1
@@ -2565,40 +2557,12 @@ Public Class SourceMdlFile2531
 
 							Dim dominantBoneIndex As Integer = -1
 							Dim maxWeight As Double = -1.0
-
-							' Check if any pelvis/spine torso bone is among fixed node weights
 							For Each kvp As KeyValuePair(Of Integer, Double) In boneWeightsMap
-								If Me.theMdlFileData.theBones IsNot Nothing AndAlso kvp.Key >= 0 AndAlso kvp.Key < Me.theMdlFileData.theBones.Count Then
-									Dim bName As String = Me.theMdlFileData.theBones(kvp.Key).theName.ToLowerInvariant()
-									If bName.Contains("pelvis") OrElse bName.Contains("spine") Then
-										If kvp.Value > maxWeight Then
-											maxWeight = kvp.Value
-											dominantBoneIndex = kvp.Key
-										End If
-									End If
+								If kvp.Value > maxWeight Then
+									maxWeight = kvp.Value
+									dominantBoneIndex = kvp.Key
 								End If
 							Next
-
-							' Fallback to highest weight overall if no pelvis/spine bone is in weights
-							If dominantBoneIndex = -1 Then
-								For Each kvp As KeyValuePair(Of Integer, Double) In boneWeightsMap
-									If kvp.Value > maxWeight Then
-										maxWeight = kvp.Value
-										dominantBoneIndex = kvp.Key
-									End If
-								Next
-							End If
-
-							' Fallback to model's pelvis bone if still not found
-							If dominantBoneIndex = -1 AndAlso Me.theMdlFileData.theBones IsNot Nothing Then
-								For bIdx As Integer = 0 To Me.theMdlFileData.theBones.Count - 1
-									Dim bName As String = Me.theMdlFileData.theBones(bIdx).theName.ToLowerInvariant()
-									If bName.Contains("pelvis") Then
-										dominantBoneIndex = bIdx
-										Exit For
-									End If
-								Next
-							End If
 
 							If dominantBoneIndex >= 0 AndAlso Me.theMdlFileData.theBones IsNot Nothing AndAlso dominantBoneIndex < Me.theMdlFileData.theBones.Count Then
 								aClothMesh.fixedBoneName = Me.theMdlFileData.theBones(dominantBoneIndex).theName
