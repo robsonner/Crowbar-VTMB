@@ -40,9 +40,12 @@ Public Class SourceMdlClothHeader2531
 End Class
 
 Public Class SourceMdlClothSpring2531
-	' Size: 4 bytes (2 * 2)
+	' Size: 16 bytes.
 	Public nodeA As UShort
 	Public nodeB As UShort
+	Public weightA As Single
+	Public weightB As Single
+	Public restLengthSq As Single
 End Class
 
 Public Class SourceMdlClothMesh2531
@@ -52,4 +55,12 @@ Public Class SourceMdlClothMesh2531
 	Public fixedBoneName As String
 	Public theNodeMeshVertexIndices As List(Of UShort)
 	Public theSprings As List(Of SourceMdlClothSpring2531)
+	' Role IDs are helper-skeleton IDs, never game bone indices.
+	Public Shared ReadOnly RoleNames As String() = {"cloth_rigid", "cloth_anchor", "cloth_pinned", "cloth_free"}
+	Public theVertexRoles As Dictionary(Of Integer, Integer)
+	Public rolesWarning As String
+
+	Public Shared Function RolesFileName(ByVal referenceFileName As String) As String
+		Return System.IO.Path.Combine(If(System.IO.Path.GetDirectoryName(referenceFileName), ""), System.IO.Path.GetFileNameWithoutExtension(referenceFileName) + "_CLOTH.smd")
+	End Function
 End Class

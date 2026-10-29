@@ -57,6 +57,10 @@
 	'Public centerZ As Single
 
 	Public vertexData As SourceMdlMeshVertexData
+	Public theClothInstances As List(Of SByte)
+	Public theClothNodes As List(Of UShort)
+	Public theClothTangents As List(Of UShort)
+	Public theClothMapError As String
 
 	'Public unused(7) As Integer
 

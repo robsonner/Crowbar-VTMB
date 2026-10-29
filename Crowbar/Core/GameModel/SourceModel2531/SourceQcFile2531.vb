@@ -1999,8 +1999,18 @@ Public Class SourceQcFile2531
 
 							line = vbTab + "stiffness " + aClothMesh.header.stiffness.ToString("0.######", TheApp.InternalNumberFormat)
 							Me.theOutputFileStreamWriter.WriteLine(line)
+							Me.theOutputFileStreamWriter.WriteLine(vbTab + "// Legacy keyword: this value is timeStepScale, not spring stiffness (RE-FACTS section 15).")
+							If aClothMesh.theVertexRoles IsNot Nothing AndAlso Not String.IsNullOrEmpty(modelBindingName) Then
+								Me.theOutputFileStreamWriter.WriteLine(vbTab + "// Requires compiler support for the new roles directive; helper bones are not game bones.")
+								Me.theOutputFileStreamWriter.WriteLine(vbTab + "roles """ + SourceMdlClothMesh2531.RolesFileName(modelBindingName) + """")
+								Me.theOutputFileStreamWriter.WriteLine(vbTab + "// Reconstruction policy: share coincident positions within this cloth; original node topology is not preserved by the helper.")
+								Me.theOutputFileStreamWriter.WriteLine(vbTab + "node_sharing ""position_within_cloth""")
+							Else
+								Me.theOutputFileStreamWriter.WriteLine(vbTab + "// WARNING: Cloth roles were not exported: " + aClothMesh.rolesWarning)
+							End If
 
 							If Not String.IsNullOrEmpty(aClothMesh.fixedBoneName) Then
+								Me.theOutputFileStreamWriter.WriteLine(vbTab + "// Legacy fallback only: dominant skinning bone; explicit roles define the actual pins.")
 								line = vbTab + "fixed_bone """ + aClothMesh.fixedBoneName + """"
 								Me.theOutputFileStreamWriter.WriteLine(line)
 							End If

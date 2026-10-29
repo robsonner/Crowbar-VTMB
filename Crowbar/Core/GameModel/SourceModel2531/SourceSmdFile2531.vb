@@ -18,6 +18,23 @@ Public Class SourceSmdFile2531
 #End Region
 
 #Region "Methods"
+	Public Property ClothVertexRoles As Dictionary(Of Integer, Integer)
+
+	Public Sub WriteClothRolesSkeleton()
+		Me.theOutputFileStreamWriter.WriteLine("// Cloth role helper: geometry/materials match REF; weights encode roles, not skinning.")
+		Me.theOutputFileStreamWriter.WriteLine("// Edit role groups with weight 1. Export separately from the character armature.")
+		Me.theOutputFileStreamWriter.WriteLine("nodes")
+		For role As Integer = 0 To SourceMdlClothMesh2531.RoleNames.Length - 1
+			Me.theOutputFileStreamWriter.WriteLine(role.ToString() + " """ + SourceMdlClothMesh2531.RoleNames(role) + """ " + If(role = 0, "-1", "0"))
+		Next
+		Me.theOutputFileStreamWriter.WriteLine("end")
+		Me.theOutputFileStreamWriter.WriteLine("skeleton")
+		Me.theOutputFileStreamWriter.WriteLine("time 0")
+		For role As Integer = 0 To SourceMdlClothMesh2531.RoleNames.Length - 1
+			Me.theOutputFileStreamWriter.WriteLine(role.ToString() + " 0 0 0 0 0 0")
+		Next
+		Me.theOutputFileStreamWriter.WriteLine("end")
+	End Sub
 
 	Public Sub WriteHeaderComment()
 		Common.WriteHeaderComment(Me.theOutputFileStreamWriter)
@@ -239,7 +256,7 @@ Public Class SourceSmdFile2531
 				Next
 			End If
 		Catch ex As Exception
-
+			If Me.ClothVertexRoles IsNot Nothing Then Throw
 		End Try
 
 		line = "end"
@@ -545,6 +562,15 @@ Public Class SourceSmdFile2531
 				Dim debug As Integer = 4242
 			End If
 
+			If Me.ClothVertexRoles IsNot Nothing Then
+				Dim role As Integer = 0
+				Me.ClothVertexRoles.TryGetValue(vertexIndex, role)
+				boneIndexes.Clear()
+				weights.Clear()
+				boneIndexes.Add(role)
+				weights.Add(1.0R)
+			End If
+
 			'NOTE: Clamp the UV coords so they are always between 0 and 1.
 			'      Example that has U > 1: "models\items\jadedragon\info\info_jadedragon.mdl"
 			If texCoordU < 0 OrElse texCoordU > 1 Then
@@ -576,7 +602,7 @@ Public Class SourceSmdFile2531
 			line += " "
 			line += (1 - texCoordV).ToString("0.000000", TheApp.InternalNumberFormat)
 
-			If aBodyModel.vertexListType = 0 Then
+			If aBodyModel.vertexListType = 0 OrElse Me.ClothVertexRoles IsNot Nothing Then
 				line += " "
 				line += boneIndexes.Count.ToString(TheApp.InternalNumberFormat)
 				For i As Integer = 0 To boneIndexes.Count - 1
@@ -587,6 +613,7 @@ Public Class SourceSmdFile2531
 				Next
 			End If
 		Catch ex As Exception
+			If Me.ClothVertexRoles IsNot Nothing Then Throw
 			line = "// " + line
 		End Try
 

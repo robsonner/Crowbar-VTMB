@@ -1952,6 +1952,42 @@ Public Class SourceMdlFile2531
 					Next
 					aMesh.vertexData = meshVertexData
 
+					' VTMB reuses the final three mesh fields as mesh-relative cloth map offsets.
+					Dim nextMeshPosition As Long = Me.theInputFileReader.BaseStream.Position
+					Try
+					Me.theInputFileReader.BaseStream.Seek(meshInputFileStreamPosition + &H30, SeekOrigin.Begin)
+					Dim instanceOffset As Integer = Me.theInputFileReader.ReadInt32()
+					Dim nodeOffset As Integer = Me.theInputFileReader.ReadInt32()
+					Dim tangentOffset As Integer = Me.theInputFileReader.ReadInt32()
+					If (instanceOffset <> 0 OrElse nodeOffset <> 0 OrElse tangentOffset <> 0) AndAlso (instanceOffset = 0 OrElse nodeOffset = 0 OrElse tangentOffset = 0) Then
+						Throw New InvalidDataException("Incomplete cloth vertex map offsets.")
+					End If
+					If instanceOffset <> 0 AndAlso nodeOffset <> 0 AndAlso tangentOffset <> 0 Then
+						Me.CheckClothRange(meshInputFileStreamPosition + instanceOffset, aMesh.vertexCount)
+						Me.CheckClothRange(meshInputFileStreamPosition + nodeOffset, CLng(aMesh.vertexCount) * 2)
+						Me.CheckClothRange(meshInputFileStreamPosition + tangentOffset, CLng(aMesh.vertexCount) * 2)
+						aMesh.theClothInstances = New List(Of SByte)()
+						aMesh.theClothNodes = New List(Of UShort)()
+						aMesh.theClothTangents = New List(Of UShort)()
+						Me.theInputFileReader.BaseStream.Seek(meshInputFileStreamPosition + instanceOffset, SeekOrigin.Begin)
+						For v As Integer = 0 To aMesh.vertexCount - 1
+							aMesh.theClothInstances.Add(Me.theInputFileReader.ReadSByte())
+						Next
+						Me.theInputFileReader.BaseStream.Seek(meshInputFileStreamPosition + nodeOffset, SeekOrigin.Begin)
+						For v As Integer = 0 To aMesh.vertexCount - 1
+							aMesh.theClothNodes.Add(Me.theInputFileReader.ReadUInt16())
+						Next
+						Me.theInputFileReader.BaseStream.Seek(meshInputFileStreamPosition + tangentOffset, SeekOrigin.Begin)
+						For v As Integer = 0 To aMesh.vertexCount - 1
+							aMesh.theClothTangents.Add(Me.theInputFileReader.ReadUInt16())
+						Next
+					End If
+					Catch ex As Exception
+						aMesh.theClothMapError = ex.Message
+					Finally
+						Me.theInputFileReader.BaseStream.Seek(nextMeshPosition, SeekOrigin.Begin)
+					End Try
+
 					aModel.theMeshes.Add(aMesh)
 
 					fileOffsetEnd = Me.theInputFileReader.BaseStream.Position - 1
@@ -2391,6 +2427,48 @@ Public Class SourceMdlFile2531
 		End If
 	End Sub
 
+	Private Sub CheckClothRange(ByVal offset As Long, ByVal size As Long)
+		If offset < 0 OrElse size < 0 OrElse offset > Me.theInputFileReader.BaseStream.Length - size Then
+			Throw New InvalidDataException("Cloth table is outside the MDL file.")
+		End If
+	End Sub
+
+	Private Sub CreateClothVertexRoles(ByVal aModel As SourceMdlModel2531, ByVal cloth As SourceMdlClothMesh2531)
+		Try
+			If aModel.unknown03(0) <> 1 Then Throw New InvalidDataException("Multiple cloth instances are not supported by the roles export yet.")
+			If cloth.theNodeMeshVertexIndices Is Nothing OrElse cloth.header.numFixedNodes < 0 OrElse cloth.header.numFixedNodes > cloth.header.numNodes OrElse cloth.header.numFreeNodes <> cloth.header.numNodes - cloth.header.numFixedNodes Then
+				Throw New InvalidDataException("Invalid cloth node partition.")
+			End If
+			Dim roles As New Dictionary(Of Integer, Integer)()
+			For node As Integer = 0 To cloth.header.numFixedNodes - 1
+				Dim vertex As Integer = cloth.theNodeMeshVertexIndices(node)
+				If vertex >= aModel.vertexCount Then Throw New InvalidDataException("Cloth anchor vertex is outside the model.")
+				roles(vertex) = 1
+			Next
+			Dim mappedCount As Integer = 0
+			For Each mesh As SourceMdlMesh2531 In aModel.theMeshes
+				If Not String.IsNullOrEmpty(mesh.theClothMapError) Then Throw New InvalidDataException(mesh.theClothMapError)
+				If mesh.theClothInstances Is Nothing Then Continue For
+				For v As Integer = 0 To mesh.vertexCount - 1
+					Dim instance As Integer = mesh.theClothInstances(v)
+					If instance = -1 Then Continue For
+					If instance <> 0 Then Throw New InvalidDataException("Unsupported cloth instance in vertex map.")
+					Dim node As Integer = CInt(mesh.theClothNodes(v)) And &H7FFF
+					If node >= cloth.header.numNodes Then Throw New InvalidDataException("Cloth node map index is out of range.")
+					Dim vertex As Integer = mesh.vertexIndexStart + v
+					If vertex < 0 OrElse vertex >= aModel.vertexCount Then Throw New InvalidDataException("Cloth mesh vertex is outside the model.")
+					roles(vertex) = If(node < cloth.header.numFixedNodes, 2, 3)
+					mappedCount += 1
+				Next
+			Next
+			If mappedCount = 0 Then Throw New InvalidDataException("No cloth vertex maps were decoded; roles cannot be inferred safely.")
+			cloth.theVertexRoles = roles
+		Catch ex As Exception
+			cloth.theVertexRoles = Nothing
+			cloth.rolesWarning = ex.Message
+		End Try
+	End Sub
+
 	Private Sub ReadClothData(ByVal modelInputFileStreamPosition As Long, ByVal aModel As SourceMdlModel2531)
 		Try
 			' 1. Collision Capsules (unknown01: 36 bytes per record)
@@ -2479,21 +2557,23 @@ Public Class SourceMdlFile2531
 
 				' 16-byte Spring records table at EDI + val1 (e.g. EDI + 484)
 				If aClothMesh.header.numSprings > 0 AndAlso aClothMesh.header.val1 > 0 Then
+					Me.CheckClothRange(ediOffset + aClothMesh.header.val1, CLng(aClothMesh.header.numSprings) * 16)
 					Me.theInputFileReader.BaseStream.Seek(ediOffset + aClothMesh.header.val1, SeekOrigin.Begin)
 					aClothMesh.theSprings = New List(Of SourceMdlClothSpring2531)(aClothMesh.header.numSprings)
 					For i As Integer = 0 To aClothMesh.header.numSprings - 1
 						Dim aSpring As New SourceMdlClothSpring2531()
 						aSpring.nodeA = Me.theInputFileReader.ReadUInt16()
 						aSpring.nodeB = Me.theInputFileReader.ReadUInt16()
-						Dim weightA As Single = Me.theInputFileReader.ReadSingle()
-						Dim weightB As Single = Me.theInputFileReader.ReadSingle()
-						Dim restLenSq As Single = Me.theInputFileReader.ReadSingle()
+						aSpring.weightA = Me.theInputFileReader.ReadSingle()
+						aSpring.weightB = Me.theInputFileReader.ReadSingle()
+						aSpring.restLengthSq = Me.theInputFileReader.ReadSingle()
 						aClothMesh.theSprings.Add(aSpring)
 					Next
 				End If
 
 				' Global model vertex indices table at EDI + nodeTableOffset (EDI + 92)
 				If aClothMesh.header.numNodes > 0 AndAlso aClothMesh.header.nodeTableOffset > 0 Then
+					Me.CheckClothRange(ediOffset + aClothMesh.header.nodeTableOffset, CLng(aClothMesh.header.numNodes) * 2)
 					Me.theInputFileReader.BaseStream.Seek(ediOffset + aClothMesh.header.nodeTableOffset, SeekOrigin.Begin)
 					aClothMesh.theNodeMeshVertexIndices = New List(Of UShort)(aClothMesh.header.numNodes)
 					For i As Integer = 0 To aClothMesh.header.numNodes - 1
@@ -2571,6 +2651,7 @@ Public Class SourceMdlFile2531
 					End If
 				End If
 
+				Me.CreateClothVertexRoles(aModel, aClothMesh)
 				aModel.theClothMesh = aClothMesh
 			End If
 		Catch ex As Exception

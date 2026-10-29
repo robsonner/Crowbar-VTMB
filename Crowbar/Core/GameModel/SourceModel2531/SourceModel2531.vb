@@ -215,8 +215,23 @@ Public Class SourceModel2531
 			smdFile.WriteNodesSection()
 			smdFile.WriteSkeletonSection()
 			smdFile.WriteTrianglesSection(lodIndex, aVtxModel, aModel, bodyPartVertexIndexStart)
+
+			If lodIndex = 0 AndAlso aModel.theClothMesh IsNot Nothing AndAlso aModel.theClothMesh.theVertexRoles IsNot Nothing Then
+				Dim rolesPath As String = SourceMdlClothMesh2531.RolesFileName(smdPathFileName)
+				Me.NotifySourceModelProgress(ProgressOptions.WritingFileStarted, rolesPath)
+				Using rolesWriter As StreamWriter = File.CreateText(rolesPath)
+					Dim rolesFile As New SourceSmdFile2531(rolesWriter, Me.theMdlFileData)
+					rolesFile.ClothVertexRoles = aModel.theClothMesh.theVertexRoles
+					rolesFile.WriteHeaderComment()
+					rolesFile.WriteHeaderSection()
+					rolesFile.WriteClothRolesSkeleton()
+					rolesFile.WriteTrianglesSection(lodIndex, aVtxModel, aModel, bodyPartVertexIndexStart)
+				End Using
+				Me.NotifySourceModelProgress(ProgressOptions.WritingFileFinished, rolesPath)
+			End If
 		Catch ex As Exception
-			Dim debug As Integer = 4242
+			status = StatusMessage.Error
+			Me.NotifySourceModelProgress(ProgressOptions.WritingFileFailed, smdPathFileName + ": " + ex.Message)
 		Finally
 			If Me.theOutputFileTextWriter IsNot Nothing Then
 				Me.theOutputFileTextWriter.Flush()
@@ -609,7 +624,11 @@ Public Class SourceModel2531
 										Continue For
 									End If
 
-									Me.WriteMeshSmdFile(smdPathFileName, lodIndex, aVtxModel, aBodyModel, bodyPartVertexIndexStart)
+									Dim meshStatus As StatusMessage = Me.WriteMeshSmdFile(smdPathFileName, lodIndex, aVtxModel, aBodyModel, bodyPartVertexIndexStart)
+									If meshStatus <> StatusMessage.Success Then
+										status = meshStatus
+										Continue For
+									End If
 
 									Me.NotifySourceModelProgress(ProgressOptions.WritingFileFinished, smdPathFileName)
 								Catch ex As Exception
