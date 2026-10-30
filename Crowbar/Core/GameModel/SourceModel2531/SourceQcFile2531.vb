@@ -2005,6 +2005,13 @@ Public Class SourceQcFile2531
 								Me.theOutputFileStreamWriter.WriteLine(vbTab + "roles """ + SourceMdlClothMesh2531.RolesFileName(modelBindingName) + """")
 								Me.theOutputFileStreamWriter.WriteLine(vbTab + "// Reconstruction policy: share coincident positions within this cloth; original node topology is not preserved by the helper.")
 								Me.theOutputFileStreamWriter.WriteLine(vbTab + "node_sharing ""position_within_cloth""")
+								If aClothMesh.bendRestRatio.HasValue Then
+									Me.theOutputFileStreamWriter.WriteLine(vbTab + "// Recovered from all bending springs: multiplier on restLengthSq, not length.")
+									Me.theOutputFileStreamWriter.WriteLine(vbTab + "bend_rest_ratio " + aClothMesh.bendRestRatio.Value.ToString("G9", TheApp.InternalNumberFormat))
+								Else
+									Me.theOutputFileStreamWriter.WriteLine(vbTab + "// WARNING: bend_rest_ratio was not recovered: " + aClothMesh.bendRestRatioWarning)
+									Me.theOutputFileStreamWriter.WriteLine(vbTab + "// Compiler default is 1; original bending behavior is not preserved.")
+								End If
 							Else
 								Me.theOutputFileStreamWriter.WriteLine(vbTab + "// WARNING: Cloth roles were not exported: " + aClothMesh.rolesWarning)
 							End If

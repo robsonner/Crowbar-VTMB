@@ -2469,6 +2469,67 @@ Public Class SourceMdlFile2531
 		End Try
 	End Sub
 
+	Private Sub RecoverClothBendRestRatio(ByVal aModel As SourceMdlModel2531, ByVal cloth As SourceMdlClothMesh2531)
+		Try
+			cloth.bendRestRatio = Nothing
+			If aModel.vertexListType <> 0 OrElse aModel.theVertexesType0 Is Nothing Then
+				Throw New InvalidDataException("Bending ratio recovery currently requires Type 0 vertices.")
+			End If
+			If cloth.theSprings Is Nothing OrElse cloth.theNodeMeshVertexIndices Is Nothing OrElse cloth.theNodeMeshVertexIndices.Count <> cloth.header.numNodes Then
+				Throw New InvalidDataException("Missing spring or node tables for bending ratio recovery.")
+			End If
+			If cloth.header.numStructuralSprings < 0 OrElse cloth.header.numShearBendSprings <= 0 OrElse CLng(cloth.header.numStructuralSprings) + cloth.header.numShearBendSprings <> cloth.theSprings.Count Then
+				Throw New InvalidDataException("Invalid or empty bending spring partition.")
+			End If
+			Dim ratios As New List(Of Double)(cloth.header.numShearBendSprings)
+			For i As Integer = cloth.header.numStructuralSprings To cloth.theSprings.Count - 1
+				Dim spring As SourceMdlClothSpring2531 = cloth.theSprings(i)
+				If spring.nodeA >= cloth.theNodeMeshVertexIndices.Count OrElse spring.nodeB >= cloth.theNodeMeshVertexIndices.Count Then
+					Throw New InvalidDataException("Bending spring node is outside the node table.")
+				End If
+				Dim vertexA As Integer = cloth.theNodeMeshVertexIndices(spring.nodeA)
+				Dim vertexB As Integer = cloth.theNodeMeshVertexIndices(spring.nodeB)
+				If vertexA >= aModel.theVertexesType0.Count OrElse vertexB >= aModel.theVertexesType0.Count Then
+					Throw New InvalidDataException("Bending node vertex is outside the model.")
+				End If
+				Dim a As SourceVector = aModel.theVertexesType0(vertexA).position
+				Dim b As SourceVector = aModel.theVertexesType0(vertexB).position
+				Dim dx As Double = a.x - b.x
+				Dim dy As Double = a.y - b.y
+				Dim dz As Double = a.z - b.z
+				Dim distanceSquared As Double = dx * dx + dy * dy + dz * dz
+				If Double.IsNaN(distanceSquared) OrElse Double.IsInfinity(distanceSquared) OrElse distanceSquared <= 0 OrElse Single.IsNaN(spring.restLengthSq) OrElse Single.IsInfinity(spring.restLengthSq) OrElse spring.restLengthSq <= 0 Then
+					Throw New InvalidDataException("Bending spring has invalid geometry or rest length.")
+				End If
+				Dim ratio As Double = spring.restLengthSq / distanceSquared
+				If Double.IsNaN(ratio) OrElse Double.IsInfinity(ratio) OrElse ratio <= 0 Then
+					Throw New InvalidDataException("Bending rest-length ratio is not positive and finite.")
+				End If
+				ratios.Add(ratio)
+			Next
+			ratios.Sort()
+			' Recover one authoring value only when EVERY record agrees with it.
+			' Six significant digits remove float/geometry noise; 1e-4 relative
+			' tolerance allows the rounding observed in the verified Type 0 models.
+			Dim candidate As Double = ratios(ratios.Count \ 2)
+			candidate = Double.Parse(candidate.ToString("G6", Globalization.CultureInfo.InvariantCulture), Globalization.CultureInfo.InvariantCulture)
+			Dim compilerValue As Single = CSng(candidate)
+			If Single.IsInfinity(compilerValue) OrElse compilerValue <= 0 Then
+				Throw New InvalidDataException("Bending ratio cannot be represented by the compiler.")
+			End If
+			For Each ratio As Double In ratios
+				If Math.Abs(ratio - candidate) > candidate * 0.0001 Then
+					Throw New InvalidDataException("Bending springs do not share a single bend_rest_ratio; per-spring values cannot be preserved in one QC parameter.")
+				End If
+			Next
+			cloth.bendRestRatio = candidate
+			cloth.bendRestRatioWarning = Nothing
+		Catch ex As Exception
+			cloth.bendRestRatio = Nothing
+			cloth.bendRestRatioWarning = ex.Message
+		End Try
+	End Sub
+
 	Private Sub ReadClothData(ByVal modelInputFileStreamPosition As Long, ByVal aModel As SourceMdlModel2531)
 		Try
 			' 1. Collision Capsules (unknown01: 36 bytes per record)
@@ -2652,6 +2713,7 @@ Public Class SourceMdlFile2531
 				End If
 
 				Me.CreateClothVertexRoles(aModel, aClothMesh)
+				Me.RecoverClothBendRestRatio(aModel, aClothMesh)
 				aModel.theClothMesh = aClothMesh
 			End If
 		Catch ex As Exception

@@ -59,6 +59,8 @@ Public Class SourceMdlClothMesh2531
 	Public Shared ReadOnly RoleNames As String() = {"cloth_rigid", "cloth_anchor", "cloth_pinned", "cloth_free"}
 	Public theVertexRoles As Dictionary(Of Integer, Integer)
 	Public rolesWarning As String
+	Public bendRestRatio As Nullable(Of Double)
+	Public bendRestRatioWarning As String
 
 	Public Shared Function RolesFileName(ByVal referenceFileName As String) As String
 		Return System.IO.Path.Combine(If(System.IO.Path.GetDirectoryName(referenceFileName), ""), System.IO.Path.GetFileNameWithoutExtension(referenceFileName) + "_CLOTH.smd")
