@@ -216,6 +216,20 @@ Public Class SourceModel2531
 			smdFile.WriteSkeletonSection()
 			smdFile.WriteTrianglesSection(lodIndex, aVtxModel, aModel, bodyPartVertexIndexStart)
 
+			If lodIndex = 0 AndAlso aModel.theClothCollisionCapsules IsNot Nothing AndAlso aModel.theClothCollisionCapsules.Count > 0 Then
+				Dim capsulesPath As String = SourceSmdFile2531.CapsulePreviewFileName(smdPathFileName)
+				Me.NotifySourceModelProgress(ProgressOptions.WritingFileStarted, capsulesPath)
+				Using capsulesWriter As StreamWriter = File.CreateText(capsulesPath)
+					Dim capsulesFile As New SourceSmdFile2531(capsulesWriter, Me.theMdlFileData)
+					capsulesFile.WriteHeaderComment()
+					capsulesFile.WriteHeaderSection()
+					capsulesFile.WriteNodesSection()
+					capsulesFile.WriteSkeletonSection()
+					capsulesFile.WriteCapsulePreviewTrianglesSection(aModel)
+				End Using
+				Me.NotifySourceModelProgress(ProgressOptions.WritingFileFinished, capsulesPath)
+			End If
+
 			If lodIndex = 0 AndAlso aModel.theClothMesh IsNot Nothing AndAlso aModel.theClothMesh.theVertexRoles IsNot Nothing Then
 				Dim rolesPath As String = SourceMdlClothMesh2531.RolesFileName(smdPathFileName)
 				Me.NotifySourceModelProgress(ProgressOptions.WritingFileStarted, rolesPath)

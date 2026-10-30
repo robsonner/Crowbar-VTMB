@@ -1913,6 +1913,8 @@ Public Class SourceQcFile2531
 
 			Dim keywordCollision As String = If(TheApp.Settings.DecompileQcUseMixedCaseForKeywordsIsChecked, "$CollisionCapsule ", "$collisioncapsule ")
 			Dim keywordConstraint As String = If(TheApp.Settings.DecompileQcUseMixedCaseForKeywordsIsChecked, "$ConstraintCapsule ", "$constraintcapsule ")
+			Dim keywordPreviewBody As String = If(TheApp.Settings.DecompileQcUseMixedCaseForKeywordsIsChecked, "$Body ", "$body ")
+			Dim previewSetIndex As Integer = 0
 
 			For Each aBodyPart As SourceMdlBodyPart2531 In Me.theMdlFileData.theBodyParts
 				If aBodyPart.theModels IsNot Nothing Then
@@ -1921,6 +1923,15 @@ Public Class SourceQcFile2531
 
 						' 1. Collision capsules (e.g. thighs)
 						If aModel.theClothCollisionCapsules IsNot Nothing Then
+							If aModel.theClothCollisionCapsules.Count > 0 Then
+								Me.theOutputFileStreamWriter.WriteLine("// Separate capsule helper on the real skeleton; imported automatically by Blender Source Tools with this QC.")
+								Me.theOutputFileStreamWriter.WriteLine("// WARNING: Comment out the following reserved $body line before compiling; studiomdl_vtmb does not consume this helper yet.")
+								Me.theOutputFileStreamWriter.WriteLine("// Preview edits do not update the QC capsule commands below. Constraint capsules remain QC-only.")
+								Dim previewName As String = SourceSmdFile2531.CapsulePreviewBodyName
+								If previewSetIndex > 0 Then previewName += "_" + previewSetIndex.ToString("D4", TheApp.InternalNumberFormat)
+								Me.theOutputFileStreamWriter.WriteLine(keywordPreviewBody + """" + previewName + """ """ + SourceSmdFile2531.CapsulePreviewFileName(modelBindingName) + """")
+								previewSetIndex += 1
+							End If
 							For Each aCapsule As SourceMdlClothCollisionCapsule2531 In aModel.theClothCollisionCapsules
 								line = keywordCollision + """" + aCapsule.theBoneName + """ "
 								If Not String.IsNullOrEmpty(aCapsule.theBone2Name) AndAlso aCapsule.theBone2Name <> aCapsule.theBoneName Then

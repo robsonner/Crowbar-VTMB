@@ -19,6 +19,12 @@ Public Class SourceSmdFile2531
 
 #Region "Methods"
 	Public Property ClothVertexRoles As Dictionary(Of Integer, Integer)
+	Public Const CapsulePreviewMaterialPrefix As String = "__vtmb_capsule_"
+	Public Const CapsulePreviewBodyName As String = "__vtmb_cloth_capsules"
+
+	Public Shared Function CapsulePreviewFileName(ByVal referenceFileName As String) As String
+		Return Path.Combine(If(Path.GetDirectoryName(referenceFileName), ""), Path.GetFileNameWithoutExtension(referenceFileName) + "_CAPSULES.smd")
+	End Function
 
 	Public Sub WriteClothRolesSkeleton()
 		Me.theOutputFileStreamWriter.WriteLine("// Cloth role helper: geometry/materials match REF; weights encode roles, not skinning.")
@@ -261,6 +267,122 @@ Public Class SourceSmdFile2531
 
 		line = "end"
 		Me.theOutputFileStreamWriter.WriteLine(line)
+	End Sub
+
+	Public Sub WriteCapsulePreviewTrianglesSection(ByVal aModel As SourceMdlModel2531)
+		Me.theOutputFileStreamWriter.WriteLine("triangles")
+		Me.WriteClothCapsulePreviews(aModel)
+		Me.theOutputFileStreamWriter.WriteLine("end")
+	End Sub
+
+	Private Sub WriteClothCapsulePreviews(ByVal aModel As SourceMdlModel2531)
+		If aModel.theClothCollisionCapsules Is Nothing OrElse aModel.theClothCollisionCapsules.Count = 0 Then Return
+		Me.theOutputFileStreamWriter.WriteLine("// VTMB cloth collision capsule previews, on the real REF skeleton, separate from render geometry.")
+		Me.theOutputFileStreamWriter.WriteLine("// WARNING: Comment out the reserved capsule-preview $body line in QC before compiling; studiomdl_vtmb does not consume this helper yet.")
+		Me.theOutputFileStreamWriter.WriteLine("// Editing a preview does not update the existing QC capsule commands.")
+		For capsuleIndex As Integer = 0 To aModel.theClothCollisionCapsules.Count - 1
+			Dim capsule As SourceMdlClothCollisionCapsule2531 = aModel.theClothCollisionCapsules(capsuleIndex)
+			Dim problem As String = Me.CapsulePreviewProblem(capsule)
+			If problem <> "" Then
+				Me.theOutputFileStreamWriter.WriteLine("// WARNING: Capsule preview " + capsuleIndex.ToString(TheApp.InternalNumberFormat) + " skipped: " + problem)
+				Continue For
+			End If
+			Dim material As String = CapsulePreviewMaterialPrefix + capsuleIndex.ToString("D4", TheApp.InternalNumberFormat)
+			Dim axis As Double() = {capsule.pt2.x - capsule.pt1.x, capsule.pt2.y - capsule.pt1.y, capsule.pt2.z - capsule.pt1.z}
+			Dim length As Double = Math.Sqrt(axis(0) * axis(0) + axis(1) * axis(1) + axis(2) * axis(2))
+			For k As Integer = 0 To 2
+				axis(k) /= length
+			Next
+			' Choose the least parallel cardinal direction to form a stable orthonormal frame.
+			Dim seed As Integer = 0
+			For k As Integer = 1 To 2
+				If Math.Abs(axis(k)) < Math.Abs(axis(seed)) Then seed = k
+			Next
+			Dim x As Double() = {0, 0, 0}
+			x((seed + 1) Mod 3) = axis((seed + 2) Mod 3)
+			x((seed + 2) Mod 3) = -axis((seed + 1) Mod 3)
+			Dim xLength As Double = Math.Sqrt(x(0) * x(0) + x(1) * x(1) + x(2) * x(2))
+			For k As Integer = 0 To 2
+				x(k) /= xLength
+			Next
+			Dim y As Double() = {axis(1) * x(2) - axis(2) * x(1), axis(2) * x(0) - axis(0) * x(2), axis(0) * x(1) - axis(1) * x(0)}
+			Dim vertices As New List(Of String)()
+			Dim rings As New List(Of Integer())()
+			Const segments As Integer = 24
+			Const hemisphereSteps As Integer = 6
+			Dim totalLength As Double = length + 2 * CDbl(capsule.radius)
+			Dim start As Double() = {capsule.pt1.x, capsule.pt1.y, capsule.pt1.z}
+			Dim finish As Double() = {capsule.pt2.x, capsule.pt2.y, capsule.pt2.z}
+			Dim negativeAxis As Double() = {-axis(0), -axis(1), -axis(2)}
+			Dim bottom As Double() = {start(0) - axis(0) * capsule.radius, start(1) - axis(1) * capsule.radius, start(2) - axis(2) * capsule.radius}
+			vertices.Add(Me.CapsulePreviewVertexLine(bottom, negativeAxis, 0.5, 0, capsule.boneIndex1))
+			For endIndex As Integer = 0 To 1
+				Dim center As Double() = If(endIndex = 0, start, finish)
+				For ringIndex As Integer = 0 To hemisphereSteps - 1
+					Dim angle As Double = If(endIndex = 0, -Math.PI / 2 + (ringIndex + 1) * Math.PI / (2 * hemisphereSteps), ringIndex * Math.PI / (2 * hemisphereSteps))
+					Dim ring(segments - 1) As Integer
+					For segment As Integer = 0 To segments - 1
+						Dim phi As Double = 2 * Math.PI * segment / segments
+						Dim normal(2) As Double
+						Dim point(2) As Double
+						For k As Integer = 0 To 2
+							normal(k) = axis(k) * Math.Sin(angle) + (x(k) * Math.Cos(phi) + y(k) * Math.Sin(phi)) * Math.Cos(angle)
+							point(k) = center(k) + capsule.radius * normal(k)
+						Next
+						ring(segment) = vertices.Count
+						Dim v As Double = (capsule.radius + endIndex * length + capsule.radius * Math.Sin(angle)) / totalLength
+						vertices.Add(Me.CapsulePreviewVertexLine(point, normal, CDbl(segment) / segments, v, capsule.boneIndex1))
+					Next
+					rings.Add(ring)
+				Next
+			Next
+			Dim pole As Integer = vertices.Count
+			Dim top As Double() = {finish(0) + axis(0) * capsule.radius, finish(1) + axis(1) * capsule.radius, finish(2) + axis(2) * capsule.radius}
+			vertices.Add(Me.CapsulePreviewVertexLine(top, axis, 0.5, 1, capsule.boneIndex1))
+			For segment As Integer = 0 To segments - 1
+				Dim following As Integer = (segment + 1) Mod segments
+				Me.WriteCapsulePreviewTriangle(material, vertices, 0, rings(0)(following), rings(0)(segment))
+				Me.WriteCapsulePreviewTriangle(material, vertices, rings(rings.Count - 1)(segment), rings(rings.Count - 1)(following), pole)
+				For ringIndex As Integer = 0 To rings.Count - 2
+					Me.WriteCapsulePreviewTriangle(material, vertices, rings(ringIndex)(segment), rings(ringIndex)(following), rings(ringIndex + 1)(following))
+					Me.WriteCapsulePreviewTriangle(material, vertices, rings(ringIndex)(segment), rings(ringIndex + 1)(following), rings(ringIndex + 1)(segment))
+				Next
+			Next
+		Next
+	End Sub
+
+	Private Function CapsulePreviewProblem(ByVal capsule As SourceMdlClothCollisionCapsule2531) As String
+		If capsule Is Nothing OrElse capsule.pt1 Is Nothing OrElse capsule.pt2 Is Nothing Then Return "missing capsule data"
+		If Me.theMdlFileData.theBones Is Nothing OrElse capsule.boneIndex1 < 0 OrElse capsule.boneIndex1 >= Me.theMdlFileData.theBones.Count OrElse capsule.boneIndex2 < 0 OrElse capsule.boneIndex2 >= Me.theMdlFileData.theBones.Count Then Return "invalid bone binding"
+		If capsule.boneIndex1 <> capsule.boneIndex2 Then Return "two-bone capsule needs an independently moving endpoint preview; QC data is retained"
+		For Each value As Double In New Double() {capsule.radius, capsule.pt1.x, capsule.pt1.y, capsule.pt1.z, capsule.pt2.x, capsule.pt2.y, capsule.pt2.z}
+			If Double.IsNaN(value) OrElse Double.IsInfinity(value) Then Return "non-finite dimensions"
+		Next
+		If capsule.radius <= 0 Then Return "non-positive radius"
+		Dim dx As Double = capsule.pt2.x - capsule.pt1.x
+		Dim dy As Double = capsule.pt2.y - capsule.pt1.y
+		Dim dz As Double = capsule.pt2.z - capsule.pt1.z
+		If dx * dx + dy * dy + dz * dz <= 0 Then Return "zero-length axis"
+		Return ""
+	End Function
+
+	Private Function CapsulePreviewVertexLine(ByVal point As Double(), ByVal normal As Double(), ByVal u As Double, ByVal v As Double, ByVal boneIndex As Integer) As String
+		Dim bone As String = boneIndex.ToString(TheApp.InternalNumberFormat)
+		Dim line As String = bone
+		For Each value As Double In point
+			line += " " + value.ToString("0.000000", TheApp.InternalNumberFormat)
+		Next
+		For Each value As Double In normal
+			line += " " + value.ToString("0.000000", TheApp.InternalNumberFormat)
+		Next
+		Return line + " " + u.ToString("0.000000", TheApp.InternalNumberFormat) + " " + v.ToString("0.000000", TheApp.InternalNumberFormat) + " 1 " + bone + " 1"
+	End Function
+
+	Private Sub WriteCapsulePreviewTriangle(ByVal material As String, ByVal vertices As List(Of String), ByVal a As Integer, ByVal b As Integer, ByVal c As Integer)
+		Me.theOutputFileStreamWriter.WriteLine(material)
+		Me.theOutputFileStreamWriter.WriteLine(vertices(a))
+		Me.theOutputFileStreamWriter.WriteLine(vertices(b))
+		Me.theOutputFileStreamWriter.WriteLine(vertices(c))
 	End Sub
 
 	Public Sub WriteTrianglesSectionForPhysics()
