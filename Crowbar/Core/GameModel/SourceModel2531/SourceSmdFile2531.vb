@@ -18,29 +18,15 @@ Public Class SourceSmdFile2531
 #End Region
 
 #Region "Methods"
-	Public Property ClothVertexRoles As Dictionary(Of Integer, Integer)
+	' Capture exact REF corner provenance without modifying ordinary SMD output.
+	Public Property ClothReferenceTriangles As List(Of SourceVclothReferenceTriangle2531)
+	Private theLastSourceVertexIndex As Integer
 	Public Const CapsulePreviewMaterialPrefix As String = "__vtmb_capsule_"
 	Public Const CapsulePreviewBodyName As String = "__vtmb_cloth_capsules"
 
 	Public Shared Function CapsulePreviewFileName(ByVal referenceFileName As String) As String
 		Return Path.Combine(If(Path.GetDirectoryName(referenceFileName), ""), Path.GetFileNameWithoutExtension(referenceFileName) + "_CAPSULES.smd")
 	End Function
-
-	Public Sub WriteClothRolesSkeleton()
-		Me.theOutputFileStreamWriter.WriteLine("// Cloth role helper: geometry/materials match REF; weights encode roles, not skinning.")
-		Me.theOutputFileStreamWriter.WriteLine("// Edit role groups with weight 1. Export separately from the character armature.")
-		Me.theOutputFileStreamWriter.WriteLine("nodes")
-		For role As Integer = 0 To SourceMdlClothMesh2531.RoleNames.Length - 1
-			Me.theOutputFileStreamWriter.WriteLine(role.ToString() + " """ + SourceMdlClothMesh2531.RoleNames(role) + """ " + If(role = 0, "-1", "0"))
-		Next
-		Me.theOutputFileStreamWriter.WriteLine("end")
-		Me.theOutputFileStreamWriter.WriteLine("skeleton")
-		Me.theOutputFileStreamWriter.WriteLine("time 0")
-		For role As Integer = 0 To SourceMdlClothMesh2531.RoleNames.Length - 1
-			Me.theOutputFileStreamWriter.WriteLine(role.ToString() + " 0 0 0 0 0 0")
-		Next
-		Me.theOutputFileStreamWriter.WriteLine("end")
-	End Sub
 
 	Public Sub WriteHeaderComment()
 		Common.WriteHeaderComment(Me.theOutputFileStreamWriter)
@@ -236,8 +222,13 @@ Public Class SourceSmdFile2531
 									For vtxIndexIndex As Integer = 0 To aStrip.indexCount - 3 Step 3
 										materialLine = materialName
 										vertex1Line = Me.GetVertexLine(aBodyModel, aStripGroup, vtxIndexIndex + aStrip.indexMeshIndex, lodIndex, meshVertexIndexStart, bodyPartVertexIndexStart)
+										Dim vertex1Index As Integer = Me.theLastSourceVertexIndex
 										vertex2Line = Me.GetVertexLine(aBodyModel, aStripGroup, vtxIndexIndex + aStrip.indexMeshIndex + 2, lodIndex, meshVertexIndexStart, bodyPartVertexIndexStart)
+										Dim vertex2Index As Integer = Me.theLastSourceVertexIndex
 										vertex3Line = Me.GetVertexLine(aBodyModel, aStripGroup, vtxIndexIndex + aStrip.indexMeshIndex + 1, lodIndex, meshVertexIndexStart, bodyPartVertexIndexStart)
+										If Me.ClothReferenceTriangles IsNot Nothing Then
+											Me.ClothReferenceTriangles.Add(New SourceVclothReferenceTriangle2531 With {.material = materialName, .vertices = New Integer() {vertex1Index, vertex2Index, Me.theLastSourceVertexIndex}, .smdCorners = New String() {vertex1Line.Trim(), vertex2Line.Trim(), vertex3Line.Trim()}})
+										End If
 										If vertex1Line.StartsWith("// ") OrElse vertex2Line.StartsWith("// ") OrElse vertex3Line.StartsWith("// ") Then
 											materialLine = "// " + materialLine
 											If Not vertex1Line.StartsWith("// ") Then
@@ -262,7 +253,7 @@ Public Class SourceSmdFile2531
 				Next
 			End If
 		Catch ex As Exception
-			If Me.ClothVertexRoles IsNot Nothing Then Throw
+			If Me.ClothReferenceTriangles IsNot Nothing Then Throw
 		End Try
 
 		line = "end"
@@ -278,8 +269,8 @@ Public Class SourceSmdFile2531
 	Private Sub WriteClothCapsulePreviews(ByVal aModel As SourceMdlModel2531)
 		If aModel.theClothCollisionCapsules Is Nothing OrElse aModel.theClothCollisionCapsules.Count = 0 Then Return
 		Me.theOutputFileStreamWriter.WriteLine("// VTMB cloth collision capsule previews, on the real REF skeleton, separate from render geometry.")
-		Me.theOutputFileStreamWriter.WriteLine("// WARNING: Comment out the reserved capsule-preview $body line in QC before compiling; studiomdl_vtmb does not consume this helper yet.")
-		Me.theOutputFileStreamWriter.WriteLine("// Editing a preview does not update the existing QC capsule commands.")
+		Me.theOutputFileStreamWriter.WriteLine("// Requires studiomdl_vtmb capsule-helper support; do not compile this helper as render geometry.")
+		Me.theOutputFileStreamWriter.WriteLine("// Same-bone helper geometry overrides QC collision capsules; split-bone and constraint records remain QC-only.")
 		For capsuleIndex As Integer = 0 To aModel.theClothCollisionCapsules.Count - 1
 			Dim capsule As SourceMdlClothCollisionCapsule2531 = aModel.theClothCollisionCapsules(capsuleIndex)
 			Dim problem As String = Me.CapsulePreviewProblem(capsule)
@@ -501,6 +492,7 @@ Public Class SourceSmdFile2531
 			End If
 			'vertexIndex = originalMeshVertexIndex + bodyPartVertexIndexStart + meshVertexIndexStart
 			vertexIndex = originalMeshVertexIndex + meshVertexIndexStart
+			Me.theLastSourceVertexIndex = vertexIndex
 
 			If aBodyModel.vertexListType = 0 Then
 				For i As Integer = 0 To aBodyModel.theVertexesType0(vertexIndex).boneIndex.Length - 1
@@ -684,15 +676,6 @@ Public Class SourceSmdFile2531
 				Dim debug As Integer = 4242
 			End If
 
-			If Me.ClothVertexRoles IsNot Nothing Then
-				Dim role As Integer = 0
-				Me.ClothVertexRoles.TryGetValue(vertexIndex, role)
-				boneIndexes.Clear()
-				weights.Clear()
-				boneIndexes.Add(role)
-				weights.Add(1.0R)
-			End If
-
 			'NOTE: Clamp the UV coords so they are always between 0 and 1.
 			'      Example that has U > 1: "models\items\jadedragon\info\info_jadedragon.mdl"
 			If texCoordU < 0 OrElse texCoordU > 1 Then
@@ -724,7 +707,7 @@ Public Class SourceSmdFile2531
 			line += " "
 			line += (1 - texCoordV).ToString("0.000000", TheApp.InternalNumberFormat)
 
-			If aBodyModel.vertexListType = 0 OrElse Me.ClothVertexRoles IsNot Nothing Then
+			If aBodyModel.vertexListType = 0 Then
 				line += " "
 				line += boneIndexes.Count.ToString(TheApp.InternalNumberFormat)
 				For i As Integer = 0 To boneIndexes.Count - 1
@@ -735,7 +718,7 @@ Public Class SourceSmdFile2531
 				Next
 			End If
 		Catch ex As Exception
-			If Me.ClothVertexRoles IsNot Nothing Then Throw
+			If Me.ClothReferenceTriangles IsNot Nothing Then Throw
 			line = "// " + line
 		End Try
 

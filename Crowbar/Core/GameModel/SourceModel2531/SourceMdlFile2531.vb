@@ -2433,102 +2433,112 @@ Public Class SourceMdlFile2531
 		End If
 	End Sub
 
-	Private Sub CreateClothVertexRoles(ByVal aModel As SourceMdlModel2531, ByVal cloth As SourceMdlClothMesh2531)
-		Try
-			If aModel.unknown03(0) <> 1 Then Throw New InvalidDataException("Multiple cloth instances are not supported by the roles export yet.")
-			If cloth.theNodeMeshVertexIndices Is Nothing OrElse cloth.header.numFixedNodes < 0 OrElse cloth.header.numFixedNodes > cloth.header.numNodes OrElse cloth.header.numFreeNodes <> cloth.header.numNodes - cloth.header.numFixedNodes Then
-				Throw New InvalidDataException("Invalid cloth node partition.")
-			End If
-			Dim roles As New Dictionary(Of Integer, Integer)()
-			For node As Integer = 0 To cloth.header.numFixedNodes - 1
-				Dim vertex As Integer = cloth.theNodeMeshVertexIndices(node)
-				If vertex >= aModel.vertexCount Then Throw New InvalidDataException("Cloth anchor vertex is outside the model.")
-				roles(vertex) = 1
+
+	Private Function ReadClothIndexTable(ByVal descriptor As Long, ByVal offset As Integer, ByVal count As Integer, ByVal width As Integer) As List(Of UShort())
+		If count < 0 OrElse (count > 0 AndAlso offset <= 0) Then Throw New InvalidDataException("Invalid cloth table count/offset.")
+		Me.CheckClothRange(descriptor + offset, CLng(count) * width * 2)
+		Me.theInputFileReader.BaseStream.Seek(descriptor + offset, SeekOrigin.Begin)
+		Dim rows As New List(Of UShort())()
+		For i As Integer = 0 To count - 1
+			Dim row(width - 1) As UShort
+			For column As Integer = 0 To width - 1
+				row(column) = Me.theInputFileReader.ReadUInt16()
 			Next
-			Dim mappedCount As Integer = 0
-			For Each mesh As SourceMdlMesh2531 In aModel.theMeshes
+			rows.Add(row)
+		Next
+		Return rows
+	End Function
+
+	Private Sub PrepareClothData(ByVal model As SourceMdlModel2531, ByVal cloth As SourceMdlClothMesh2531, ByVal descriptor As Long)
+		Try
+			cloth.isDataReady = False
+			Dim h As SourceMdlClothHeader2531 = cloth.header
+			If model.unknown03(0) <> 1 Then Throw New InvalidDataException("Multiple cloth instances are not supported by VCLOTH version 1.")
+			If model.vertexListType <> 0 OrElse model.theVertexesType0 Is Nothing OrElse model.theVertexesType0.Count <> model.vertexCount Then Throw New InvalidDataException("VCLOTH export requires a complete Type 0 vertex table.")
+			If h.numNodes <= 0 OrElse h.numNodes > &H8000 OrElse h.numFixedNodes < 0 OrElse h.numFixedNodes > h.numNodes OrElse h.numFreeNodes <> h.numNodes - h.numFixedNodes Then Throw New InvalidDataException("Invalid cloth node partition.")
+			If cloth.theNodeMeshVertexIndices Is Nothing OrElse cloth.theNodeMeshVertexIndices.Count <> h.numNodes Then Throw New InvalidDataException("Incomplete cloth node references.")
+			For Each vertex As UShort In cloth.theNodeMeshVertexIndices
+				If vertex >= model.vertexCount Then Throw New InvalidDataException("Cloth node vertex is outside the model.")
+			Next
+			If h.numStructuralSprings < 0 OrElse h.numShearBendSprings < 0 OrElse CLng(h.numStructuralSprings) + h.numShearBendSprings <> h.numSprings OrElse cloth.theSprings Is Nothing OrElse cloth.theSprings.Count <> h.numSprings Then Throw New InvalidDataException("Invalid cloth spring partition.")
+			For Each spring As SourceMdlClothSpring2531 In cloth.theSprings
+				If spring.nodeA >= h.numNodes OrElse spring.nodeB >= h.numNodes OrElse spring.nodeA = spring.nodeB OrElse Not SourceVclothFile2531.IsFinite(spring.weightA) OrElse Not SourceVclothFile2531.IsFinite(spring.weightB) OrElse Not SourceVclothFile2531.IsFinite(spring.restLengthSq) OrElse spring.restLengthSq <= 0 Then Throw New InvalidDataException("Invalid cloth spring record.")
+			Next
+			' Remaining documented descriptor fields, relative to EDI (RE-FACTS section 15).
+			Me.CheckClothRange(descriptor, 92)
+			Me.theInputFileReader.BaseStream.Seek(descriptor + &H3C, SeekOrigin.Begin)
+			cloth.normalEdgePrefix = Me.theInputFileReader.ReadInt32()
+			Dim edgeOffset As Integer = Me.theInputFileReader.ReadInt32()
+			Dim triangleCount As Integer = Me.theInputFileReader.ReadInt32()
+			Dim triangleOffset As Integer = Me.theInputFileReader.ReadInt32()
+			Dim tangentCount As Integer = Me.theInputFileReader.ReadInt32()
+			Dim tangentOffset As Integer = Me.theInputFileReader.ReadInt32()
+			Dim higherLod As Integer = Me.theInputFileReader.ReadInt32()
+			Dim lowerLod As Integer = Me.theInputFileReader.ReadInt32()
+			cloth.hasLodInterpolation = higherLod <> 0 OrElse lowerLod <> 0
+			If cloth.hasLodInterpolation Then Throw New InvalidDataException("Cloth LOD interpolation is not supported by VCLOTH version 1; data was not exported.")
+			cloth.theEdges = Me.ReadClothIndexTable(descriptor, edgeOffset, h.subTable2Count, 2)
+			cloth.theTriangles = Me.ReadClothIndexTable(descriptor, triangleOffset, triangleCount, 5)
+			cloth.theCollisionNeighbors = Me.ReadClothIndexTable(descriptor, h.subTable2Offset, h.subTable1Count, 3)
+			If cloth.normalEdgePrefix < 0 OrElse cloth.normalEdgePrefix > cloth.theEdges.Count Then Throw New InvalidDataException("Invalid cloth normal edge prefix.")
+			For Each edge As UShort() In cloth.theEdges
+				If edge(0) >= h.numNodes OrElse edge(1) >= h.numNodes Then Throw New InvalidDataException("Invalid cloth edge node.")
+			Next
+			For Each triangle As UShort() In cloth.theTriangles
+				If triangle(0) >= cloth.theEdges.Count OrElse triangle(1) >= cloth.theEdges.Count Then Throw New InvalidDataException("Invalid cloth triangle edge.")
+				For i As Integer = 2 To 4
+					If triangle(i) >= h.numNodes Then Throw New InvalidDataException("Invalid cloth triangle node.")
+				Next
+			Next
+			For Each neighbors As UShort() In cloth.theCollisionNeighbors
+				For Each node As UShort In neighbors
+					If node >= h.numNodes Then Throw New InvalidDataException("Invalid cloth collision neighbor.")
+				Next
+			Next
+			If tangentCount < 0 OrElse (tangentCount > 0 AndAlso tangentOffset <= 0) Then Throw New InvalidDataException("Invalid cloth tangent table.")
+			Me.CheckClothRange(descriptor + tangentOffset, CLng(tangentCount) * 12)
+			Me.theInputFileReader.BaseStream.Seek(descriptor + tangentOffset, SeekOrigin.Begin)
+			cloth.theTangents = New List(Of SourceMdlClothTangent2531)()
+			For i As Integer = 0 To tangentCount - 1
+				Dim tangent As New SourceMdlClothTangent2531 With {.edge0 = Me.theInputFileReader.ReadUInt16(), .edge1 = Me.theInputFileReader.ReadUInt16(), .coefficient0 = Me.theInputFileReader.ReadSingle(), .coefficient1 = Me.theInputFileReader.ReadSingle()}
+				If tangent.edge0 >= cloth.theEdges.Count OrElse tangent.edge1 >= cloth.theEdges.Count OrElse Not SourceVclothFile2531.IsFinite(tangent.coefficient0) OrElse Not SourceVclothFile2531.IsFinite(tangent.coefficient1) Then Throw New InvalidDataException("Invalid cloth tangent record.")
+				cloth.theTangents.Add(tangent)
+			Next
+			If h.val2 < 0 OrElse h.val3 < 0 OrElse CLng(h.val2) + h.val3 > Integer.MaxValue Then Throw New InvalidDataException("Invalid cloth batch counts.")
+			Dim batchCount As Integer = h.val2 + h.val3
+			If batchCount > 0 AndAlso h.subTable1Offset <= 0 Then Throw New InvalidDataException("Missing cloth batch offset.")
+			Me.CheckClothRange(descriptor + h.subTable1Offset, batchCount)
+			Me.theInputFileReader.BaseStream.Seek(descriptor + h.subTable1Offset, SeekOrigin.Begin)
+			cloth.theBatchSizes = New List(Of Byte)()
+			Dim structural As Long = 0
+			Dim bending As Long = 0
+			For i As Integer = 0 To batchCount - 1
+				Dim size As Byte = Me.theInputFileReader.ReadByte()
+				If size < 1 OrElse size > 4 Then Throw New InvalidDataException("Invalid cloth SIMD batch size.")
+				cloth.theBatchSizes.Add(size)
+				If i < h.val2 Then structural += size Else bending += size
+			Next
+			If structural <> h.numStructuralSprings OrElse bending <> h.numShearBendSprings Then Throw New InvalidDataException("Cloth batches do not cover spring families.")
+			For Each mesh As SourceMdlMesh2531 In model.theMeshes
 				If Not String.IsNullOrEmpty(mesh.theClothMapError) Then Throw New InvalidDataException(mesh.theClothMapError)
+				If mesh.vertexIndexStart < 0 OrElse mesh.vertexCount < 0 OrElse CLng(mesh.vertexIndexStart) + mesh.vertexCount > model.vertexCount Then Throw New InvalidDataException("Invalid cloth mesh vertex range.")
 				If mesh.theClothInstances Is Nothing Then Continue For
+				If mesh.theClothNodes Is Nothing OrElse mesh.theClothTangents Is Nothing OrElse mesh.theClothInstances.Count <> mesh.vertexCount OrElse mesh.theClothNodes.Count <> mesh.vertexCount OrElse mesh.theClothTangents.Count <> mesh.vertexCount Then Throw New InvalidDataException("Incomplete cloth vertex maps.")
 				For v As Integer = 0 To mesh.vertexCount - 1
 					Dim instance As Integer = mesh.theClothInstances(v)
 					If instance = -1 Then Continue For
-					If instance <> 0 Then Throw New InvalidDataException("Unsupported cloth instance in vertex map.")
-					Dim node As Integer = CInt(mesh.theClothNodes(v)) And &H7FFF
-					If node >= cloth.header.numNodes Then Throw New InvalidDataException("Cloth node map index is out of range.")
-					Dim vertex As Integer = mesh.vertexIndexStart + v
-					If vertex < 0 OrElse vertex >= aModel.vertexCount Then Throw New InvalidDataException("Cloth mesh vertex is outside the model.")
-					roles(vertex) = If(node < cloth.header.numFixedNodes, 2, 3)
-					mappedCount += 1
+					If instance <> 0 OrElse (CInt(mesh.theClothNodes(v)) And &H7FFF) >= h.numNodes Then Throw New InvalidDataException("Invalid cloth instance or node map.")
+					Dim tangent As Integer = mesh.theClothTangents(v)
+					If tangent < h.numNodes OrElse tangent >= h.numNodes + tangentCount Then Throw New InvalidDataException("Invalid cloth tangent map.")
 				Next
 			Next
-			If mappedCount = 0 Then Throw New InvalidDataException("No cloth vertex maps were decoded; roles cannot be inferred safely.")
-			cloth.theVertexRoles = roles
+			cloth.isDataReady = True
 		Catch ex As Exception
-			cloth.theVertexRoles = Nothing
-			cloth.rolesWarning = ex.Message
+			cloth.isDataReady = False
+			cloth.exportWarning = ex.Message
 		End Try
 	End Sub
 
-	Private Sub RecoverClothBendRestRatio(ByVal aModel As SourceMdlModel2531, ByVal cloth As SourceMdlClothMesh2531)
-		Try
-			cloth.bendRestRatio = Nothing
-			If aModel.vertexListType <> 0 OrElse aModel.theVertexesType0 Is Nothing Then
-				Throw New InvalidDataException("Bending ratio recovery currently requires Type 0 vertices.")
-			End If
-			If cloth.theSprings Is Nothing OrElse cloth.theNodeMeshVertexIndices Is Nothing OrElse cloth.theNodeMeshVertexIndices.Count <> cloth.header.numNodes Then
-				Throw New InvalidDataException("Missing spring or node tables for bending ratio recovery.")
-			End If
-			If cloth.header.numStructuralSprings < 0 OrElse cloth.header.numShearBendSprings <= 0 OrElse CLng(cloth.header.numStructuralSprings) + cloth.header.numShearBendSprings <> cloth.theSprings.Count Then
-				Throw New InvalidDataException("Invalid or empty bending spring partition.")
-			End If
-			Dim ratios As New List(Of Double)(cloth.header.numShearBendSprings)
-			For i As Integer = cloth.header.numStructuralSprings To cloth.theSprings.Count - 1
-				Dim spring As SourceMdlClothSpring2531 = cloth.theSprings(i)
-				If spring.nodeA >= cloth.theNodeMeshVertexIndices.Count OrElse spring.nodeB >= cloth.theNodeMeshVertexIndices.Count Then
-					Throw New InvalidDataException("Bending spring node is outside the node table.")
-				End If
-				Dim vertexA As Integer = cloth.theNodeMeshVertexIndices(spring.nodeA)
-				Dim vertexB As Integer = cloth.theNodeMeshVertexIndices(spring.nodeB)
-				If vertexA >= aModel.theVertexesType0.Count OrElse vertexB >= aModel.theVertexesType0.Count Then
-					Throw New InvalidDataException("Bending node vertex is outside the model.")
-				End If
-				Dim a As SourceVector = aModel.theVertexesType0(vertexA).position
-				Dim b As SourceVector = aModel.theVertexesType0(vertexB).position
-				Dim dx As Double = a.x - b.x
-				Dim dy As Double = a.y - b.y
-				Dim dz As Double = a.z - b.z
-				Dim distanceSquared As Double = dx * dx + dy * dy + dz * dz
-				If Double.IsNaN(distanceSquared) OrElse Double.IsInfinity(distanceSquared) OrElse distanceSquared <= 0 OrElse Single.IsNaN(spring.restLengthSq) OrElse Single.IsInfinity(spring.restLengthSq) OrElse spring.restLengthSq <= 0 Then
-					Throw New InvalidDataException("Bending spring has invalid geometry or rest length.")
-				End If
-				Dim ratio As Double = spring.restLengthSq / distanceSquared
-				If Double.IsNaN(ratio) OrElse Double.IsInfinity(ratio) OrElse ratio <= 0 Then
-					Throw New InvalidDataException("Bending rest-length ratio is not positive and finite.")
-				End If
-				ratios.Add(ratio)
-			Next
-			ratios.Sort()
-			' Recover one authoring value only when EVERY record agrees with it.
-			' Six significant digits remove float/geometry noise; 1e-4 relative
-			' tolerance allows the rounding observed in the verified Type 0 models.
-			Dim candidate As Double = ratios(ratios.Count \ 2)
-			candidate = Double.Parse(candidate.ToString("G6", Globalization.CultureInfo.InvariantCulture), Globalization.CultureInfo.InvariantCulture)
-			Dim compilerValue As Single = CSng(candidate)
-			If Single.IsInfinity(compilerValue) OrElse compilerValue <= 0 Then
-				Throw New InvalidDataException("Bending ratio cannot be represented by the compiler.")
-			End If
-			For Each ratio As Double In ratios
-				If Math.Abs(ratio - candidate) > candidate * 0.0001 Then
-					Throw New InvalidDataException("Bending springs do not share a single bend_rest_ratio; per-spring values cannot be preserved in one QC parameter.")
-				End If
-			Next
-			cloth.bendRestRatio = candidate
-			cloth.bendRestRatioWarning = Nothing
-		Catch ex As Exception
-			cloth.bendRestRatio = Nothing
-			cloth.bendRestRatioWarning = ex.Message
-		End Try
-	End Sub
 
 	Private Sub ReadClothData(ByVal modelInputFileStreamPosition As Long, ByVal aModel As SourceMdlModel2531)
 		Try
@@ -2677,43 +2687,10 @@ Public Class SourceMdlFile2531
 							aClothMesh.theMeshMaterialName = "mesh_" + bestMeshIndex.ToString()
 						End If
 
-						' Determine root/fixed bone from the cloth nodes (global vertex indices directly, NO vertexIndexStart offset!)
-						If aModel.theVertexesType0 IsNot Nothing Then
-							Dim boneWeightsMap As New Dictionary(Of Integer, Double)()
-							For i As Integer = 0 To aClothMesh.theNodeMeshVertexIndices.Count - 1
-								Dim globalIdx As Integer = CInt(aClothMesh.theNodeMeshVertexIndices(i))
-								If globalIdx >= 0 AndAlso globalIdx < aModel.theVertexesType0.Count Then
-									Dim vert As SourceMdlType0Vertex2531 = aModel.theVertexesType0(globalIdx)
-									For b As Integer = 0 To vert.boneIndex.Length - 1
-										If vert.weight(b) > 0 Then
-											Dim bIdx As Integer = CInt(vert.boneIndex(b))
-											If Not boneWeightsMap.ContainsKey(bIdx) Then
-												boneWeightsMap(bIdx) = 0.0
-											End If
-											boneWeightsMap(bIdx) += CDbl(vert.weight(b))
-										End If
-									Next
-								End If
-							Next
-
-							Dim dominantBoneIndex As Integer = -1
-							Dim maxWeight As Double = -1.0
-							For Each kvp As KeyValuePair(Of Integer, Double) In boneWeightsMap
-								If kvp.Value > maxWeight Then
-									maxWeight = kvp.Value
-									dominantBoneIndex = kvp.Key
-								End If
-							Next
-
-							If dominantBoneIndex >= 0 AndAlso Me.theMdlFileData.theBones IsNot Nothing AndAlso dominantBoneIndex < Me.theMdlFileData.theBones.Count Then
-								aClothMesh.fixedBoneName = Me.theMdlFileData.theBones(dominantBoneIndex).theName
-							End If
-						End If
 					End If
 				End If
 
-				Me.CreateClothVertexRoles(aModel, aClothMesh)
-				Me.RecoverClothBendRestRatio(aModel, aClothMesh)
+				Me.PrepareClothData(aModel, aClothMesh, ediOffset)
 				aModel.theClothMesh = aClothMesh
 			End If
 		Catch ex As Exception

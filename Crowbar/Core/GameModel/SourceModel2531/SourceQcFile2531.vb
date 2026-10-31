@@ -1925,8 +1925,8 @@ Public Class SourceQcFile2531
 						If aModel.theClothCollisionCapsules IsNot Nothing Then
 							If aModel.theClothCollisionCapsules.Count > 0 Then
 								Me.theOutputFileStreamWriter.WriteLine("// Separate capsule helper on the real skeleton; imported automatically by Blender Source Tools with this QC.")
-								Me.theOutputFileStreamWriter.WriteLine("// WARNING: Comment out the following reserved $body line before compiling; studiomdl_vtmb does not consume this helper yet.")
-								Me.theOutputFileStreamWriter.WriteLine("// Preview edits do not update the QC capsule commands below. Constraint capsules remain QC-only.")
+								Me.theOutputFileStreamWriter.WriteLine("// Requires studiomdl_vtmb capsule-helper support; helper geometry overrides same-bone QC capsule commands.")
+								Me.theOutputFileStreamWriter.WriteLine("// Split-bone capsule records and constraint capsules remain QC-only.")
 								Dim previewName As String = SourceSmdFile2531.CapsulePreviewBodyName
 								If previewSetIndex > 0 Then previewName += "_" + previewSetIndex.ToString("D4", TheApp.InternalNumberFormat)
 								Me.theOutputFileStreamWriter.WriteLine(keywordPreviewBody + """" + previewName + """ """ + SourceSmdFile2531.CapsulePreviewFileName(modelBindingName) + """")
@@ -1972,6 +1972,10 @@ Public Class SourceQcFile2531
 						' 3. Cloth simulation mesh ($Cloth)
 						If aModel.theClothMesh IsNot Nothing AndAlso aModel.theClothMesh.header IsNot Nothing Then
 							Dim aClothMesh As SourceMdlClothMesh2531 = aModel.theClothMesh
+							If Not aClothMesh.isDataReady OrElse String.IsNullOrEmpty(modelBindingName) Then
+								Me.theOutputFileStreamWriter.WriteLine("// WARNING: VCLOTH was not exported: " + If(aClothMesh.exportWarning, "missing REF model binding"))
+								Continue For
+							End If
 							Dim matName As String = aClothMesh.theMeshMaterialName
 							If (String.IsNullOrEmpty(matName) OrElse matName.StartsWith("mesh_")) AndAlso _
 							   aClothMesh.theMeshIndex >= 0 AndAlso aModel.theMeshes IsNot Nothing AndAlso aClothMesh.theMeshIndex < aModel.theMeshes.Count Then
@@ -2008,30 +2012,8 @@ Public Class SourceQcFile2531
 								Me.theOutputFileStreamWriter.WriteLine(line)
 							End If
 
-							line = vbTab + "stiffness " + aClothMesh.header.stiffness.ToString("0.######", TheApp.InternalNumberFormat)
-							Me.theOutputFileStreamWriter.WriteLine(line)
-							Me.theOutputFileStreamWriter.WriteLine(vbTab + "// Legacy keyword: this value is timeStepScale, not spring stiffness (RE-FACTS section 15).")
-							If aClothMesh.theVertexRoles IsNot Nothing AndAlso Not String.IsNullOrEmpty(modelBindingName) Then
-								Me.theOutputFileStreamWriter.WriteLine(vbTab + "// Requires compiler support for the new roles directive; helper bones are not game bones.")
-								Me.theOutputFileStreamWriter.WriteLine(vbTab + "roles """ + SourceMdlClothMesh2531.RolesFileName(modelBindingName) + """")
-								Me.theOutputFileStreamWriter.WriteLine(vbTab + "// Reconstruction policy: share coincident positions within this cloth; original node topology is not preserved by the helper.")
-								Me.theOutputFileStreamWriter.WriteLine(vbTab + "node_sharing ""position_within_cloth""")
-								If aClothMesh.bendRestRatio.HasValue Then
-									Me.theOutputFileStreamWriter.WriteLine(vbTab + "// Recovered from all bending springs: multiplier on restLengthSq, not length.")
-									Me.theOutputFileStreamWriter.WriteLine(vbTab + "bend_rest_ratio " + aClothMesh.bendRestRatio.Value.ToString("G9", TheApp.InternalNumberFormat))
-								Else
-									Me.theOutputFileStreamWriter.WriteLine(vbTab + "// WARNING: bend_rest_ratio was not recovered: " + aClothMesh.bendRestRatioWarning)
-									Me.theOutputFileStreamWriter.WriteLine(vbTab + "// Compiler default is 1; original bending behavior is not preserved.")
-								End If
-							Else
-								Me.theOutputFileStreamWriter.WriteLine(vbTab + "// WARNING: Cloth roles were not exported: " + aClothMesh.rolesWarning)
-							End If
-
-							If Not String.IsNullOrEmpty(aClothMesh.fixedBoneName) Then
-								Me.theOutputFileStreamWriter.WriteLine(vbTab + "// Legacy fallback only: dominant skinning bone; explicit roles define the actual pins.")
-								line = vbTab + "fixed_bone """ + aClothMesh.fixedBoneName + """"
-								Me.theOutputFileStreamWriter.WriteLine(line)
-							End If
+							Me.theOutputFileStreamWriter.WriteLine(vbTab + "// Requires studiomdl_vtmb VCLOTH version 1 support.")
+							Me.theOutputFileStreamWriter.WriteLine(vbTab + "source """ + SourceMdlClothMesh2531.DataFileName(modelBindingName) + """")
 
 							line = "}"
 							Me.theOutputFileStreamWriter.WriteLine(line)

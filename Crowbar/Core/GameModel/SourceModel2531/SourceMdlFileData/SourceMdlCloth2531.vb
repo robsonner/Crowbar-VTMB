@@ -52,17 +52,26 @@ Public Class SourceMdlClothMesh2531
 	Public header As SourceMdlClothHeader2531
 	Public theMeshIndex As Integer
 	Public theMeshMaterialName As String
-	Public fixedBoneName As String
 	Public theNodeMeshVertexIndices As List(Of UShort)
 	Public theSprings As List(Of SourceMdlClothSpring2531)
-	' Role IDs are helper-skeleton IDs, never game bone indices.
-	Public Shared ReadOnly RoleNames As String() = {"cloth_rigid", "cloth_anchor", "cloth_pinned", "cloth_free"}
-	Public theVertexRoles As Dictionary(Of Integer, Integer)
-	Public rolesWarning As String
-	Public bendRestRatio As Nullable(Of Double)
-	Public bendRestRatioWarning As String
+	Public exportWarning As String
+	Public isDataReady As Boolean
+	Public theEdges As List(Of UShort())
+	Public theTriangles As List(Of UShort())
+	Public theTangents As List(Of SourceMdlClothTangent2531)
+	Public theCollisionNeighbors As List(Of UShort())
+	Public theBatchSizes As List(Of Byte)
+	Public normalEdgePrefix As Integer
+	Public hasLodInterpolation As Boolean
 
-	Public Shared Function RolesFileName(ByVal referenceFileName As String) As String
-		Return System.IO.Path.Combine(If(System.IO.Path.GetDirectoryName(referenceFileName), ""), System.IO.Path.GetFileNameWithoutExtension(referenceFileName) + "_CLOTH.smd")
+	Public Shared Function DataFileName(ByVal referenceFileName As String) As String
+		Return System.IO.Path.ChangeExtension(referenceFileName, ".vcloth")
 	End Function
+End Class
+
+Public Class SourceMdlClothTangent2531
+	Public edge0 As UShort
+	Public edge1 As UShort
+	Public coefficient0 As Single
+	Public coefficient1 As Single
 End Class

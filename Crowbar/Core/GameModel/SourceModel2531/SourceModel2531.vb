@@ -209,6 +209,9 @@ Public Class SourceModel2531
 			Me.theOutputFileTextWriter = File.CreateText(smdPathFileName)
 			Dim smdFile As New SourceSmdFile2531(Me.theOutputFileTextWriter, Me.theMdlFileData)
 
+			If lodIndex = 0 AndAlso aModel.theClothMesh IsNot Nothing AndAlso aModel.theClothMesh.isDataReady Then
+				smdFile.ClothReferenceTriangles = New List(Of SourceVclothReferenceTriangle2531)()
+			End If
 			smdFile.WriteHeaderComment()
 
 			smdFile.WriteHeaderSection()
@@ -230,18 +233,12 @@ Public Class SourceModel2531
 				Me.NotifySourceModelProgress(ProgressOptions.WritingFileFinished, capsulesPath)
 			End If
 
-			If lodIndex = 0 AndAlso aModel.theClothMesh IsNot Nothing AndAlso aModel.theClothMesh.theVertexRoles IsNot Nothing Then
-				Dim rolesPath As String = SourceMdlClothMesh2531.RolesFileName(smdPathFileName)
-				Me.NotifySourceModelProgress(ProgressOptions.WritingFileStarted, rolesPath)
-				Using rolesWriter As StreamWriter = File.CreateText(rolesPath)
-					Dim rolesFile As New SourceSmdFile2531(rolesWriter, Me.theMdlFileData)
-					rolesFile.ClothVertexRoles = aModel.theClothMesh.theVertexRoles
-					rolesFile.WriteHeaderComment()
-					rolesFile.WriteHeaderSection()
-					rolesFile.WriteClothRolesSkeleton()
-					rolesFile.WriteTrianglesSection(lodIndex, aVtxModel, aModel, bodyPartVertexIndexStart)
-				End Using
-				Me.NotifySourceModelProgress(ProgressOptions.WritingFileFinished, rolesPath)
+			If smdFile.ClothReferenceTriangles IsNot Nothing Then
+				Dim clothPath As String = SourceMdlClothMesh2531.DataFileName(smdPathFileName)
+				Me.NotifySourceModelProgress(ProgressOptions.WritingFileStarted, clothPath)
+				Dim document As String = SourceVclothFile2531.Serialize(aModel, Me.theMdlFileData, Path.GetFileName(smdPathFileName), smdFile.ClothReferenceTriangles)
+				File.WriteAllText(clothPath, document, New System.Text.UTF8Encoding(False))
+				Me.NotifySourceModelProgress(ProgressOptions.WritingFileFinished, clothPath)
 			End If
 		Catch ex As Exception
 			status = StatusMessage.Error

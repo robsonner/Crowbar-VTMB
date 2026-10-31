@@ -32,13 +32,13 @@ the capsule SMD. Original collision capsule QC commands are retained. Constraint
 records remain QC-only. No model-name, bone-name, coordinate or fixed-count
 exceptions are used. Higher LODs do not get duplicate capsule helper files.
 
-## Current compiler limitation
+## Compiler support
 
-This is the decompiler/Blender preview stage. studiomdl_vtmb does not yet treat
-the helper body as authoring data or read capsule geometry edits. **Comment out
-every reserved capsule-preview $body line before compiling.** Otherwise it is
-an ordinary render body. Keep the original $CollisionCapsule commands; preview
-edits do not update those commands. Both QC and capsule SMD warn about this.
+Use studiomdl_vtmb with reserved capsule-helper body support. It reads the helper
+as authoring data, replaces same-bone collision capsule QC records for the target
+model, and excludes helper triangles from render geometry. Split-bone records
+and constraints remain QC-only. Older compilers must not receive these helpers
+as ordinary render bodies.
 
 REF no longer needs preview faces removed. For exports from the earlier embedded
 preview build, decompile into a new directory rather than mixing old REF helper
