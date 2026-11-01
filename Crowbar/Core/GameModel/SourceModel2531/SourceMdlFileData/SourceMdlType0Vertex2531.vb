@@ -28,10 +28,23 @@
 	'Public weight As Double
 	'Public boneIndex As Short
 	' Weights total to 255.
-	Public weight(2) As Byte
-	Public unknown1 As Byte
-	Public boneIndex(2) As Short
-	Public unknown2 As Short
+	' Experimental v2531 layout: three stored weights and an implicit fourth.
+	' Keep decoded arrays aligned for both REF SMD and VCLOTH exports.
+	Public weight(3) As Byte
+	Public influenceSelector As Byte
+	Public boneIndex(3) As Short
+
+	Public Sub DecodeWeights()
+		Dim count As Integer = Math.Max(1, CInt(influenceSelector) Mod 5)
+		If count = 4 Then
+			Dim remainder As Integer = 255 - CInt(weight(0)) - CInt(weight(1)) - CInt(weight(2))
+			If remainder < 0 Then Throw New System.IO.InvalidDataException("VTMB four-influence vertex weights exceed 255.")
+			weight(3) = CByte(remainder)
+		End If
+		For i As Integer = count To 3
+			weight(i) = 0
+		Next
+	End Sub
 	'Public boneCount As Byte
 	'Public materialIndex As Short
 	'Public firstRef As Short

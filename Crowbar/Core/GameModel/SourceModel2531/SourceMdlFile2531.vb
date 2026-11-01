@@ -2212,14 +2212,14 @@ Public Class SourceMdlFile2531
 					'fileOffsetStart = Me.theInputFileReader.BaseStream.Position
 					Dim aVertex As New SourceMdlType0Vertex2531()
 
-					For x As Integer = 0 To aVertex.weight.Length - 1
+					For x As Integer = 0 To 2
 						aVertex.weight(x) = Me.theInputFileReader.ReadByte()
 					Next
-					aVertex.unknown1 = Me.theInputFileReader.ReadByte()
+					aVertex.influenceSelector = Me.theInputFileReader.ReadByte()
 					For x As Integer = 0 To aVertex.boneIndex.Length - 1
 						aVertex.boneIndex(x) = Me.theInputFileReader.ReadInt16()
 					Next
-					aVertex.unknown2 = Me.theInputFileReader.ReadInt16()
+					aVertex.DecodeWeights()
 
 					aVertex.position.x = Me.theInputFileReader.ReadSingle()
 					aVertex.position.y = Me.theInputFileReader.ReadSingle()
