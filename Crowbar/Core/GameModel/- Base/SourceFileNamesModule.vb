@@ -244,7 +244,7 @@ Module SourceFileNamesModule
 		Dim vrdFileName As String
 
 		If version = 2531 Then
-			vrdFileName = modelName + "_bones.txt"
+			vrdFileName = modelName + ".vhb"
 		Else
 			vrdFileName = modelName + ".vrd"
 		End If
