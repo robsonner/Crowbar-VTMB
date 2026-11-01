@@ -1,5 +1,13 @@
 # Experimental v2531 four-influence export
 
+## Accepted integration
+
+On 2026-11-01 the user confirmed that the paired Crowbar/compiler changes
+resolved the Jeanette issue in the game and authorized integration into master.
+This is user-reported runtime acceptance for that case, not independent Ghidra
+verification or complete coverage of all models and render paths. The experiment
+description below records the implementation's origin.
+
 Branch: `experiment/vtmb-four-influences` (2026-11-01).
 Baseline commit: `7ed780a`.
 
