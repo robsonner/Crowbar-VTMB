@@ -1,5 +1,13 @@
 # Experimental v2531 PHY reference pose
 
+## Accepted integration
+
+On 2026-11-02 the user confirmed that the paired Crowbar/compiler correction
+works well for Sheriff and authorized integration into master. This is
+user-reported acceptance of the tested workflow, not exhaustive model coverage
+or independent Ghidra verification. The notes below record the experiment's
+implementation and pre-acceptance state.
+
 Date: 2026-11-02. Branch: `experiment/vtmb-phy-reference-pose`.
 Baseline: `dcf176e` (clean and already committed before this experiment).
 
