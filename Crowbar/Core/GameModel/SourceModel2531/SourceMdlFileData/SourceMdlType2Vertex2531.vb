@@ -1,17 +1,15 @@
 ﻿Public Class SourceMdlType2Vertex2531
 
+	' Vertex format 2 (compressed, unskinned), 8 bytes:
+	'	unsigned char position[3];	// / 255 * model position scale + model position offset
+	'	unsigned char normalIndex;	// index into the coarse normal table
+	'	unsigned short texCoord[2];	// / 65535
+
 	Public positionX As Byte
 	Public positionY As Byte
 	Public positionZ As Byte
-	'Public positionX As SByte
-	'Public positionY As SByte
-	'Public positionZ As SByte
-
-	Public normalX As Byte
-	Public normalY As Byte
-	'NOTE: Yes, this is intentionally out of expected order.
-	Public texCoordU As Byte
-	Public normalZ As Byte
-	Public texCoordV As Byte
+	Public normalIndex As Byte
+	Public texCoordU As UInt16
+	Public texCoordV As UInt16
 
 End Class

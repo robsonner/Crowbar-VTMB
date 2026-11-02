@@ -514,166 +514,12 @@ Public Class SourceSmdFile2531
 				normal.z = aBodyModel.theVertexesType0(vertexIndex).normal.z
 				texCoordU = aBodyModel.theVertexesType0(vertexIndex).texCoordU
 				texCoordV = aBodyModel.theVertexesType0(vertexIndex).texCoordV
-			ElseIf aBodyModel.vertexListType = 1 Then
-				boneIndexes.Add(0)
-				'position.x = (aBodyModel.theVertexesType1(vertexIndex).positionX / 65535) * Me.theMdlFileData.hullMinPosition.x
-				'position.y = (aBodyModel.theVertexesType1(vertexIndex).positionY / 65535) * Me.theMdlFileData.hullMinPosition.y
-				'position.z = (aBodyModel.theVertexesType1(vertexIndex).positionZ / 65535) * Me.theMdlFileData.hullMinPosition.z
-				''position.x = (aBodyModel.theVertexesType1(vertexIndex).positionX / 65535) * Me.theMdlFileData.hullMinPosition.y
-				''position.y = (aBodyModel.theVertexesType1(vertexIndex).positionY / 65535) * Me.theMdlFileData.hullMinPosition.z
-				''position.z = (aBodyModel.theVertexesType1(vertexIndex).positionZ / 65535) * Me.theMdlFileData.hullMinPosition.x
-				'normal.x = (aBodyModel.theVertexesType1(vertexIndex).normalX / 65535) * Me.theMdlFileData.hullMaxPosition.x
-				'normal.y = (aBodyModel.theVertexesType1(vertexIndex).normalY / 65535) * Me.theMdlFileData.hullMaxPosition.y
-				'normal.z = (aBodyModel.theVertexesType1(vertexIndex).normalZ / 65535) * Me.theMdlFileData.hullMaxPosition.z
-				'texCoordU = (aBodyModel.theVertexesType1(vertexIndex).normalY / 65535)
-				'texCoordV = (aBodyModel.theVertexesType1(vertexIndex).normalZ / 65535)
-
-				' Too big compared to Therese.
-				'position.x = (aBodyModel.theVertexesType1(vertexIndex).positionX)
-				'position.y = (aBodyModel.theVertexesType1(vertexIndex).positionY)
-				'position.z = (aBodyModel.theVertexesType1(vertexIndex).positionZ)
-				' Too big compared to Therese.
-				'position.x = (aBodyModel.theVertexesType1(vertexIndex).positionX / 255)
-				'position.y = (aBodyModel.theVertexesType1(vertexIndex).positionY / 255)
-				'position.z = (aBodyModel.theVertexesType1(vertexIndex).positionZ / 255)
-				' Not correct scale for some models and car_idle seems shortened on one axis. Thus, it seems 3 scale values should be used.
-				'position.x = (aBodyModel.theVertexesType1(vertexIndex).positionX / 4095)
-				'position.y = (aBodyModel.theVertexesType1(vertexIndex).positionY / 4095)
-				'position.z = (aBodyModel.theVertexesType1(vertexIndex).positionZ / 4095)
-				' Too small compared to Therese.
-				'position.x = (aBodyModel.theVertexesType1(vertexIndex).positionX / 32767)
-				'position.y = (aBodyModel.theVertexesType1(vertexIndex).positionY / 32767)
-				'position.z = (aBodyModel.theVertexesType1(vertexIndex).positionZ / 32767)
-				' Too small compared to Therese.
-				'position.x = (aBodyModel.theVertexesType1(vertexIndex).positionX / 65535)
-				'position.y = (aBodyModel.theVertexesType1(vertexIndex).positionY / 65535)
-				'position.z = (aBodyModel.theVertexesType1(vertexIndex).positionZ / 65535)
-				' Flattens car_idle
-				'position.x = (aBodyModel.theVertexesType1(vertexIndex).positionX / 65535) * Me.theMdlFileData.unknown01
-				'position.y = (aBodyModel.theVertexesType1(vertexIndex).positionY / 65535) * Me.theMdlFileData.unknown02
-				'position.z = (aBodyModel.theVertexesType1(vertexIndex).positionZ / 65535) * Me.theMdlFileData.unknown03
-
-				'position.x = (aBodyModel.theVertexesType1(vertexIndex).positionX / 65535) * Me.theMdlFileData.hullMinPosition.x
-				'position.y = (aBodyModel.theVertexesType1(vertexIndex).positionY / 65535) * Me.theMdlFileData.hullMinPosition.y
-				'position.z = (aBodyModel.theVertexesType1(vertexIndex).positionZ / 65535) * Me.theMdlFileData.hullMinPosition.z
-				'position.x = (aBodyModel.theVertexesType1(vertexIndex).positionX / 255) * Me.theMdlFileData.hullMinPosition.x
-				'position.y = (aBodyModel.theVertexesType1(vertexIndex).positionY / 255) * Me.theMdlFileData.hullMinPosition.y
-				'position.z = (aBodyModel.theVertexesType1(vertexIndex).positionZ / 255) * Me.theMdlFileData.hullMinPosition.z
-				'normal.x = (aBodyModel.theVertexesType1(vertexIndex).normalX / 65535)
-				'normal.y = (aBodyModel.theVertexesType1(vertexIndex).normalY / 65535)
-				'normal.z = (aBodyModel.theVertexesType1(vertexIndex).normalZ / 65535)
-				'texCoordU = (aBodyModel.theVertexesType1(vertexIndex).normalY / 65535)
-				'texCoordV = (aBodyModel.theVertexesType1(vertexIndex).normalZ / 65535)
-				'position.x = (aBodyModel.theVertexesType1(vertexIndex).positionX / 65535) * Me.theMdlFileData.unknown02
-				'position.y = (aBodyModel.theVertexesType1(vertexIndex).positionY / 65535) * Me.theMdlFileData.unknown02
-				'position.z = (aBodyModel.theVertexesType1(vertexIndex).positionZ / 65535) * Me.theMdlFileData.unknown02
-				'position.x = (aBodyModel.theVertexesType1(vertexIndex).positionX / 65535) * Me.theMdlFileData.hullMaxPosition.x
-				'position.y = (aBodyModel.theVertexesType1(vertexIndex).positionY / 65535) * Me.theMdlFileData.hullMaxPosition.y
-				'position.z = (aBodyModel.theVertexesType1(vertexIndex).positionZ / 65535) * Me.theMdlFileData.hullMaxPosition.z
-				'Dim aBone As SourceMdlBone2531
-				'aBone = Me.theMdlFileData.theBones(0)
-				'Dim vecin As New SourceVector
-				'vecin.x = (aBodyModel.theVertexesType1(vertexIndex).positionX / 65535)
-				'vecin.y = (aBodyModel.theVertexesType1(vertexIndex).positionY / 65535)
-				'vecin.z = (aBodyModel.theVertexesType1(vertexIndex).positionZ / 65535)
-				'position = MathModule.VectorTransform(vecin, aBone.poseToBoneColumn0, aBone.poseToBoneColumn1, aBone.poseToBoneColumn2, aBone.poseToBoneColumn3)
-				'position.x = (aBodyModel.theVertexesType1(vertexIndex).positionX / 65535) * (aBodyModel.theVertexesType1(vertexIndex).scaleX)
-				'position.y = (aBodyModel.theVertexesType1(vertexIndex).positionY / 65535) * (aBodyModel.theVertexesType1(vertexIndex).scaleY)
-				'position.z = (aBodyModel.theVertexesType1(vertexIndex).positionZ / 65535) * (aBodyModel.theVertexesType1(vertexIndex).scaleZ)
-				'NOTE: This seems to work for many models, but seems to be wrong for:  
-				'      models\character\npc\common\freshcorpses\femalefreshcorpse\femalefreshcorpse.mdl
-				'      models\character\monster\werewolf\werewolf_head\werewolf_head.mdl
-				'position.x = (aBodyModel.theVertexesType1(vertexIndex).positionX / 65535) * (Me.theMdlFileData.hullMaxPosition.x - Me.theMdlFileData.hullMinPosition.x)
-				'position.y = (aBodyModel.theVertexesType1(vertexIndex).positionY / 65535) * (Me.theMdlFileData.hullMaxPosition.y - Me.theMdlFileData.hullMinPosition.y)
-				'position.z = (aBodyModel.theVertexesType1(vertexIndex).positionZ / 65535) * (Me.theMdlFileData.hullMaxPosition.z - Me.theMdlFileData.hullMinPosition.z)
-				'NOTE: This seems to work for many models, but seems to be wrong for:  
-				'      models\character\npc\common\freshcorpses\femalefreshcorpse\femalefreshcorpse.mdl
-				position.x = (aBodyModel.theVertexesType1(vertexIndex).positionX / 65535) * (Me.theMdlFileData.hullMaxPosition.x - Me.theMdlFileData.theBodyParts(0).theModels(0).unknown01(0))
-				position.y = (aBodyModel.theVertexesType1(vertexIndex).positionY / 65535) * (Me.theMdlFileData.hullMaxPosition.y - Me.theMdlFileData.theBodyParts(0).theModels(0).unknown01(1))
-				position.z = (aBodyModel.theVertexesType1(vertexIndex).positionZ / 65535) * (Me.theMdlFileData.hullMaxPosition.z - Me.theMdlFileData.theBodyParts(0).theModels(0).unknown01(2))
-				'position.x = (aBodyModel.theVertexesType1(vertexIndex).positionX / 65535) * (Me.theMdlFileData.hullMaxPosition.x - Me.theMdlFileData.hullMinPosition.x - Me.theMdlFileData.unknown01)
-				'position.y = (aBodyModel.theVertexesType1(vertexIndex).positionY / 65535) * (Me.theMdlFileData.hullMaxPosition.y - Me.theMdlFileData.hullMinPosition.y - Me.theMdlFileData.unknown02)
-				'position.z = (aBodyModel.theVertexesType1(vertexIndex).positionZ / 65535) * (Me.theMdlFileData.hullMaxPosition.z - Me.theMdlFileData.hullMinPosition.z - Me.theMdlFileData.unknown03)
-				'position.x = (aBodyModel.theVertexesType1(vertexIndex).positionX / 65535) * (Me.theMdlFileData.hullMaxPosition.x - Me.theMdlFileData.hullMinPosition.x + Me.theMdlFileData.unknown01)
-				'position.y = (aBodyModel.theVertexesType1(vertexIndex).positionY / 65535) * (Me.theMdlFileData.hullMaxPosition.y - Me.theMdlFileData.hullMinPosition.y + Me.theMdlFileData.unknown02)
-				'position.z = (aBodyModel.theVertexesType1(vertexIndex).positionZ / 65535) * (Me.theMdlFileData.hullMaxPosition.z - Me.theMdlFileData.hullMinPosition.z + Me.theMdlFileData.unknown03)
-				'position.x = (aBodyModel.theVertexesType1(vertexIndex).positionX / 65535) * (Me.theMdlFileData.hullMaxPosition.x - Me.theMdlFileData.theBodyParts(0).theModels(0).unknown01(0) + Me.theMdlFileData.unknown01)
-				'position.y = (aBodyModel.theVertexesType1(vertexIndex).positionY / 65535) * (Me.theMdlFileData.hullMaxPosition.y - Me.theMdlFileData.theBodyParts(0).theModels(0).unknown01(1) + Me.theMdlFileData.unknown02)
-				'position.z = (aBodyModel.theVertexesType1(vertexIndex).positionZ / 65535) * (Me.theMdlFileData.hullMaxPosition.z - Me.theMdlFileData.theBodyParts(0).theModels(0).unknown01(2) + Me.theMdlFileData.unknown03)
-				'position.x = (aBodyModel.theVertexesType1(vertexIndex).positionX / 65535) * (Me.theMdlFileData.theBodyParts(0).theModels(0).unknown01(0) + Me.theMdlFileData.theBodyParts(0).theModels(0).unknown02(0))
-				'position.y = (aBodyModel.theVertexesType1(vertexIndex).positionY / 65535) * (Me.theMdlFileData.theBodyParts(0).theModels(0).unknown01(1) + Me.theMdlFileData.theBodyParts(0).theModels(0).unknown02(1))
-				'position.z = (aBodyModel.theVertexesType1(vertexIndex).positionZ / 65535) * (Me.theMdlFileData.theBodyParts(0).theModels(0).unknown01(2) + Me.theMdlFileData.theBodyParts(0).theModels(0).unknown02(2))
-				'position.x = (aBodyModel.theVertexesType1(vertexIndex).positionX / 65535) * (Me.theMdlFileData.theBodyParts(0).theModels(0).unknown01(0) - Me.theMdlFileData.theBodyParts(0).theModels(0).unknown02(0))
-				'position.y = (aBodyModel.theVertexesType1(vertexIndex).positionY / 65535) * (Me.theMdlFileData.theBodyParts(0).theModels(0).unknown01(1) - Me.theMdlFileData.theBodyParts(0).theModels(0).unknown02(1))
-				'position.z = (aBodyModel.theVertexesType1(vertexIndex).positionZ / 65535) * (Me.theMdlFileData.theBodyParts(0).theModels(0).unknown01(2) - Me.theMdlFileData.theBodyParts(0).theModels(0).unknown02(2))
-				' This puts the corpse facing up, but still stretched along z-axis.
-				'position.x = (aBodyModel.theVertexesType1(vertexIndex).positionX / 65535) * (Me.theMdlFileData.theBodyParts(0).theModels(0).unknown01(0) * Me.theMdlFileData.theBodyParts(0).theModels(0).unknown02(0))
-				'position.y = (aBodyModel.theVertexesType1(vertexIndex).positionY / 65535) * (Me.theMdlFileData.theBodyParts(0).theModels(0).unknown01(1) * Me.theMdlFileData.theBodyParts(0).theModels(0).unknown02(1))
-				'position.z = (aBodyModel.theVertexesType1(vertexIndex).positionZ / 65535) * (Me.theMdlFileData.theBodyParts(0).theModels(0).unknown01(2) * Me.theMdlFileData.theBodyParts(0).theModels(0).unknown02(2))
-				' This is close, but scale is probably wrong and slightly stretched along z-axis.
-				'position.x = (aBodyModel.theVertexesType1(vertexIndex).positionX / 65535) * (Me.theMdlFileData.hullMaxPosition.x - Me.theMdlFileData.theBodyParts(0).theModels(0).unknown01(0)) * Me.theMdlFileData.theBodyParts(0).theModels(0).unknown02(0)
-				'position.y = (aBodyModel.theVertexesType1(vertexIndex).positionY / 65535) * (Me.theMdlFileData.hullMaxPosition.y - Me.theMdlFileData.theBodyParts(0).theModels(0).unknown01(1)) * Me.theMdlFileData.theBodyParts(0).theModels(0).unknown02(1)
-				'position.z = (aBodyModel.theVertexesType1(vertexIndex).positionZ / 65535) * (Me.theMdlFileData.hullMaxPosition.z - Me.theMdlFileData.theBodyParts(0).theModels(0).unknown01(2)) * Me.theMdlFileData.theBodyParts(0).theModels(0).unknown02(2)
-				'position.x = (aBodyModel.theVertexesType1(vertexIndex).positionX) * (Me.theMdlFileData.hullMaxPosition.x - Me.theMdlFileData.theBodyParts(0).theModels(0).unknown01(0)) * Me.theMdlFileData.theBodyParts(0).theModels(0).unknown02(0)
-				'position.y = (aBodyModel.theVertexesType1(vertexIndex).positionY) * (Me.theMdlFileData.hullMaxPosition.y - Me.theMdlFileData.theBodyParts(0).theModels(0).unknown01(1)) * Me.theMdlFileData.theBodyParts(0).theModels(0).unknown02(1)
-				'position.z = (aBodyModel.theVertexesType1(vertexIndex).positionZ) * (Me.theMdlFileData.hullMaxPosition.z - Me.theMdlFileData.theBodyParts(0).theModels(0).unknown01(2)) * Me.theMdlFileData.theBodyParts(0).theModels(0).unknown02(2)
-				' Completely flat.
-				'position.x = (aBodyModel.theVertexesType1(vertexIndex).positionX) * (Me.theMdlFileData.hullMaxPosition.x) * Me.theMdlFileData.theBodyParts(0).theModels(0).unknown02(0)
-				'position.y = (aBodyModel.theVertexesType1(vertexIndex).positionY) * (Me.theMdlFileData.hullMaxPosition.y) * Me.theMdlFileData.theBodyParts(0).theModels(0).unknown02(1)
-				'position.z = (aBodyModel.theVertexesType1(vertexIndex).positionZ) * (Me.theMdlFileData.hullMaxPosition.z) * Me.theMdlFileData.theBodyParts(0).theModels(0).unknown02(2)
-
-				'TODO: Verify these.
-				normal.x = (aBodyModel.theVertexesType1(vertexIndex).normalX / 255)
-				normal.y = (aBodyModel.theVertexesType1(vertexIndex).normalY / 255)
-				normal.z = (aBodyModel.theVertexesType1(vertexIndex).normalZ / 255)
-
-				' These are correct.
-				texCoordU = (aBodyModel.theVertexesType1(vertexIndex).texCoordU / 255)
-				texCoordV = (aBodyModel.theVertexesType1(vertexIndex).texCoordV / 255)
-			ElseIf aBodyModel.vertexListType = 2 Then
-				boneIndexes.Add(0)
-				'position.x = (aBodyModel.theVertexesType2(vertexIndex).positionX / 255) * (Me.theMdlFileData.hullMaxPosition.x - Me.theMdlFileData.hullMinPosition.x)
-				'position.y = (aBodyModel.theVertexesType2(vertexIndex).positionY / 255) * (Me.theMdlFileData.hullMaxPosition.y - Me.theMdlFileData.hullMinPosition.y)
-				'position.z = (aBodyModel.theVertexesType2(vertexIndex).positionZ / 255) * (Me.theMdlFileData.hullMaxPosition.z - Me.theMdlFileData.hullMinPosition.z)
-				'position.x = (aBodyModel.theVertexesType2(vertexIndex).positionX / 127.5) * (Me.theMdlFileData.hullMaxPosition.x - Me.theMdlFileData.hullMinPosition.x)
-				'position.y = (aBodyModel.theVertexesType2(vertexIndex).positionY / 127.5) * (Me.theMdlFileData.hullMaxPosition.y - Me.theMdlFileData.hullMinPosition.y)
-				'position.z = (aBodyModel.theVertexesType2(vertexIndex).positionZ / 127.5) * (Me.theMdlFileData.hullMaxPosition.z - Me.theMdlFileData.hullMinPosition.z)
-				'position.x = (aBodyModel.theVertexesType2(vertexIndex).positionX / 255) * (Me.theMdlFileData.theBodyParts(0).theModels(0).unknown01(0))
-				'position.y = (aBodyModel.theVertexesType2(vertexIndex).positionY / 255) * (Me.theMdlFileData.theBodyParts(0).theModels(0).unknown01(1))
-				'position.z = (aBodyModel.theVertexesType2(vertexIndex).positionZ / 255) * (Me.theMdlFileData.theBodyParts(0).theModels(0).unknown01(2))
-				'position.x = (aBodyModel.theVertexesType2(vertexIndex).positionX / 255) * (Me.theMdlFileData.theBodyParts(0).theModels(0).unknown01(0) * Me.theMdlFileData.theBodyParts(0).theModels(0).unknown02(0))
-				'position.y = (aBodyModel.theVertexesType2(vertexIndex).positionY / 255) * (Me.theMdlFileData.theBodyParts(0).theModels(0).unknown01(1) * Me.theMdlFileData.theBodyParts(0).theModels(0).unknown02(1))
-				'position.z = (aBodyModel.theVertexesType2(vertexIndex).positionZ / 255) * (Me.theMdlFileData.theBodyParts(0).theModels(0).unknown01(2) * Me.theMdlFileData.theBodyParts(0).theModels(0).unknown02(2))
-				'position.x = ((aBodyModel.theVertexesType2(vertexIndex).positionX - 128) / 255) * (Me.theMdlFileData.hullMaxPosition.x - Me.theMdlFileData.hullMinPosition.x)
-				'position.y = ((aBodyModel.theVertexesType2(vertexIndex).positionY - 128) / 255) * (Me.theMdlFileData.hullMaxPosition.y - Me.theMdlFileData.hullMinPosition.y)
-				'position.z = (aBodyModel.theVertexesType2(vertexIndex).positionZ / 255) * (Me.theMdlFileData.hullMaxPosition.z - Me.theMdlFileData.hullMinPosition.z)
-				' This makes candelabra really close to candelabra_candles.
-				position.x = ((aBodyModel.theVertexesType2(vertexIndex).positionX - 128) / 255) * (Me.theMdlFileData.hullMaxPosition.x - Me.theMdlFileData.theBodyParts(0).theModels(0).unknown01(0))
-				position.y = ((aBodyModel.theVertexesType2(vertexIndex).positionY - 128) / 255) * (Me.theMdlFileData.hullMaxPosition.y - Me.theMdlFileData.theBodyParts(0).theModels(0).unknown01(1))
-				position.z = (aBodyModel.theVertexesType2(vertexIndex).positionZ / 255) * (Me.theMdlFileData.hullMaxPosition.z - Me.theMdlFileData.theBodyParts(0).theModels(0).unknown01(2))
-				' Too big for candelabra.
-				'position.x = ((aBodyModel.theVertexesType2(vertexIndex).positionX - 128) / 255) * (Me.theMdlFileData.hullMaxPosition.x - Me.theMdlFileData.theBodyParts(0).theModels(0).unknown01(0)) * Me.theMdlFileData.theBodyParts(0).theModels(0).unknown02(0)
-				'position.y = ((aBodyModel.theVertexesType2(vertexIndex).positionY - 128) / 255) * (Me.theMdlFileData.hullMaxPosition.y - Me.theMdlFileData.theBodyParts(0).theModels(0).unknown01(1)) * Me.theMdlFileData.theBodyParts(0).theModels(0).unknown02(1)
-				'position.z = (aBodyModel.theVertexesType2(vertexIndex).positionZ / 255) * (Me.theMdlFileData.hullMaxPosition.z - Me.theMdlFileData.theBodyParts(0).theModels(0).unknown01(2)) * Me.theMdlFileData.theBodyParts(0).theModels(0).unknown02(2)
-				' Too big for candelabra.
-				'position.x = ((aBodyModel.theVertexesType2(vertexIndex).positionX - 128) / 255) * (Me.theMdlFileData.theBodyParts(0).theModels(0).unknown02(0) - Me.theMdlFileData.theBodyParts(0).theModels(0).unknown01(0))
-				'position.y = ((aBodyModel.theVertexesType2(vertexIndex).positionY - 128) / 255) * (Me.theMdlFileData.theBodyParts(0).theModels(0).unknown02(1) - Me.theMdlFileData.theBodyParts(0).theModels(0).unknown01(1))
-				'position.z = (aBodyModel.theVertexesType2(vertexIndex).positionZ / 255) * (Me.theMdlFileData.theBodyParts(0).theModels(0).unknown02(2) - Me.theMdlFileData.theBodyParts(0).theModels(0).unknown01(2))
-				' Candelabra: Too big and upside-down and under candelabra_candles.
-				'position.x = ((aBodyModel.theVertexesType2(vertexIndex).positionX - 128) / 255) * (Me.theMdlFileData.theBodyParts(0).theModels(0).unknown01(0) - Me.theMdlFileData.theBodyParts(0).theModels(0).unknown02(0))
-				'position.y = ((aBodyModel.theVertexesType2(vertexIndex).positionY - 128) / 255) * (Me.theMdlFileData.theBodyParts(0).theModels(0).unknown01(1) - Me.theMdlFileData.theBodyParts(0).theModels(0).unknown02(1))
-				'position.z = (aBodyModel.theVertexesType2(vertexIndex).positionZ / 255) * (Me.theMdlFileData.theBodyParts(0).theModels(0).unknown01(2) - Me.theMdlFileData.theBodyParts(0).theModels(0).unknown02(2))
-
-				'TODO: Verify these.
-				normal.x = (aBodyModel.theVertexesType2(vertexIndex).normalX / 255)
-				normal.y = (aBodyModel.theVertexesType2(vertexIndex).normalY / 255)
-				normal.z = (aBodyModel.theVertexesType2(vertexIndex).normalZ / 255)
-
-				' These are correct.
-				texCoordU = (aBodyModel.theVertexesType2(vertexIndex).texCoordU / 255)
-				texCoordV = (aBodyModel.theVertexesType2(vertexIndex).texCoordV / 255)
 			Else
-				Dim debug As Integer = 4242
+				boneIndexes.Add(0)
+				weights.Add(1.0R)
+				position = aBodyModel.GetVertexPosition(vertexIndex)
+				normal = aBodyModel.GetVertexNormal(vertexIndex)
+				aBodyModel.GetVertexTexCoord(vertexIndex, texCoordU, texCoordV)
 			End If
 
 			'NOTE: Clamp the UV coords so they are always between 0 and 1.
@@ -944,8 +790,9 @@ Public Class SourceSmdFile2531
 				End If
 
 				If (aBone.flags And 2) <> 0 Then
-					' Root-space rotation bone (branch 0x02 in engine.dll:FUN_20009fc0):
-					' The RLE animation stream contains rotation in model/root space (R_mdl).
+					' Model-space rotation bone: the game builds its world rotation
+					' as entity transform * stored rotation, skipping the parent
+					' chain, so the stored rotation is in model space (R_mdl).
 					' To write clean local Euler angles to SMD (which Blender expects):
 					' R_local = inv(R_parent_world) * R_mdl
 					Dim R_mdl As Double(,) = MathModule.EulerAnglesToMatrix2531(rot)
@@ -966,12 +813,11 @@ Public Class SourceSmdFile2531
 					aFrameLine.rotation.z = rot.z
 					aFrameLine.rotation.debug_text = rot.debug_text
 
-					If aBone.parentBoneIndex = -1 Then
-						worldRotations(boneIndex) = identityMatrix
-					Else
-						Dim R_local As Double(,) = MathModule.EulerAnglesToMatrix2531(rot)
-						worldRotations(boneIndex) = MathModule.Matrix3x3Multiply(parentWorldMatrix, R_local)
-					End If
+					' A root bone's world rotation is its own rotation (the entity
+					' transform is identity in model space), so a model-space bone
+					' below a rotated root must undo that rotation too.
+					Dim R_local As Double(,) = MathModule.EulerAnglesToMatrix2531(rot)
+					worldRotations(boneIndex) = MathModule.Matrix3x3Multiply(parentWorldMatrix, R_local)
 				End If
 
 				pos = Me.CalcBonePosition(frameIndex, s, aBone, anAnimation)
