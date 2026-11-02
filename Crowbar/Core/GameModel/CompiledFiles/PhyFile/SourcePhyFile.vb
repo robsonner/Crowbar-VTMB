@@ -367,6 +367,17 @@ Public Class SourcePhyFile
 		End If
 	End Sub
 
+	Private Shared Function ParseSolidVector(ByVal value As String) As SourceVector
+		Dim fields As String() = value.Split(New Char() {" "c, ChrW(9)}, StringSplitOptions.RemoveEmptyEntries)
+		If fields.Length <> 3 Then Throw New InvalidDataException("PHY solid pose requires three coordinates.")
+		Dim values(2) As Double
+		For i As Integer = 0 To 2
+			values(i) = Double.Parse(fields(i), TheApp.InternalNumberFormat)
+			If Double.IsNaN(values(i)) OrElse Double.IsInfinity(values(i)) Then Throw New InvalidDataException("PHY solid pose contains a nonfinite coordinate.")
+		Next
+		Return New SourceVector() With {.x = values(0), .y = values(1), .z = values(2)}
+	End Function
+
 	Public Sub ReadSourcePhysCollisionModels()
 		Dim fileOffsetStart As Long
 		Dim fileOffsetEnd As Long
@@ -400,6 +411,12 @@ Public Class SourcePhyFile
 							aSourcePhysCollisionModel.theIndex = Integer.Parse(value, TheApp.InternalNumberFormat)
 						ElseIf key = "name" Then
 							aSourcePhysCollisionModel.theName = value
+						ElseIf key = "origin" Then
+							aSourcePhysCollisionModel.theOrigin = ParseSolidVector(value)
+							aSourcePhysCollisionModel.theOriginIsValid = True
+						ElseIf key = "angles" Then
+							aSourcePhysCollisionModel.theAngles = ParseSolidVector(value)
+							aSourcePhysCollisionModel.theAnglesAreValid = True
 						ElseIf key = "parent" Then
 							aSourcePhysCollisionModel.theParentIsValid = True
 							aSourcePhysCollisionModel.theParentName = value

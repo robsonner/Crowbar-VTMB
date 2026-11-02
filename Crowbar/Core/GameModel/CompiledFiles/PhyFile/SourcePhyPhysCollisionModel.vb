@@ -79,6 +79,10 @@ Public Class SourcePhyPhysCollisionModel
 
 	Public theIndex As Integer
 	Public theName As String
+	Public theOrigin As New SourceVector()
+	Public theAngles As New SourceVector()
+	Public theOriginIsValid As Boolean = False
+	Public theAnglesAreValid As Boolean = False
 	Public theParentIsValid As Boolean = False
 	Public theParentName As String
 	Public theMass As Single

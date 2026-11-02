@@ -1421,6 +1421,16 @@ Public Class SourceSmdFile2531
 		aVector.y = 1 / 0.0254 * vertex.z
 		aVector.z = 1 / 0.0254 * -vertex.y
 		If aSourcePhysCollisionModel IsNot Nothing Then
+			' Experimental v2531 support: explicit PHY reference pose takes precedence
+			' over the MDL bind, which can differ from the collision authoring pose.
+			If aSourcePhysCollisionModel.theOriginIsValid OrElse aSourcePhysCollisionModel.theAnglesAreValid Then
+				If Not aSourcePhysCollisionModel.theOriginIsValid OrElse Not aSourcePhysCollisionModel.theAnglesAreValid Then Throw New InvalidDataException("Incomplete PHY solid origin/angles reference pose.")
+				Dim c0 As New SourceVector(), c1 As New SourceVector(), c2 As New SourceVector(), c3 As New SourceVector()
+				Dim angles As SourceVector = aSourcePhysCollisionModel.theAngles
+				MathModule.AngleMatrix(MathModule.DegreesToRadians(angles.x), MathModule.DegreesToRadians(angles.y), MathModule.DegreesToRadians(angles.z), c0, c1, c2, c3)
+				c3 = aSourcePhysCollisionModel.theOrigin
+				Return MathModule.VectorTransform(aVector, c0, c1, c2, c3)
+			End If
 			If Me.theMdlFileData.theBoneNameToBoneIndexMap.ContainsKey(aSourcePhysCollisionModel.theName) Then
 				aBone = Me.theMdlFileData.theBones(Me.theMdlFileData.theBoneNameToBoneIndexMap(aSourcePhysCollisionModel.theName))
 			Else
