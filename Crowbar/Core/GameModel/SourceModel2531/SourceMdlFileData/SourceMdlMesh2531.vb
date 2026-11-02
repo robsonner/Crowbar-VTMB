@@ -47,8 +47,8 @@
 	Public flexCount As Integer
 	Public flexOffset As Integer
 
-	'Public materialType As Integer
-	'Public materialParam As Integer
+	Public materialType As Integer
+	Public materialParam As Integer
 
 	'Public id As Integer
 

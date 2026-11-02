@@ -324,27 +324,24 @@ Public Class SourceQcFile2531
 			eyeballTextureName = ""
 			irisTextureName = ""
 
-			' 1. Match dedicated eyeball mesh texture from model textures (e.g. Eyeball_r / Eyeball_l)
-			If Me.theMdlFileData.theTextures IsNot Nothing Then
-				For Each aTexture As SourceMdlTexture2531 In Me.theMdlFileData.theTextures
-					Dim texLower As String = aTexture.theFileName.ToLower()
-					If (eyeballIndex = 0 OrElse eyeballName.ToLower().Contains("right")) AndAlso (texLower.Contains("eyeball_r") OrElse (texLower.EndsWith("_r") AndAlso texLower.Contains("eye"))) Then
-						eyeballTextureName = aTexture.theFileName
-						Exit For
-					ElseIf (eyeballIndex = 1 OrElse eyeballName.ToLower().Contains("left")) AndAlso (texLower.Contains("eyeball_l") OrElse (texLower.EndsWith("_l") AndAlso texLower.Contains("eye"))) Then
-						eyeballTextureName = aTexture.theFileName
-						Exit For
+			' Preserve the mesh-to-eye relationship; eye order and material suffixes
+			' do not establish which mesh belongs to an eyeball record.
+			If aBodyModel.theMeshes IsNot Nothing AndAlso Me.theMdlFileData.theTextures IsNot Nothing Then
+				For Each mesh As SourceMdlMesh2531 In aBodyModel.theMeshes
+					If mesh.materialType <> 1 OrElse mesh.materialParam <> eyeballIndex Then Continue For
+					Dim textureIndex As Integer = mesh.materialIndex
+					If Me.theMdlFileData.theSkinFamilies IsNot Nothing AndAlso Me.theMdlFileData.theSkinFamilies.Count > 0 Then
+						Dim skin As List(Of Short) = Me.theMdlFileData.theSkinFamilies(0)
+						If textureIndex < 0 OrElse textureIndex >= skin.Count Then Throw New System.IO.InvalidDataException("Eyeball mesh has an invalid skin reference.")
+						textureIndex = skin(textureIndex)
 					End If
+					If textureIndex < 0 OrElse textureIndex >= Me.theMdlFileData.theTextures.Count Then Throw New System.IO.InvalidDataException("Eyeball mesh has an invalid texture index.")
+					Dim materialName As String = Me.theMdlFileData.theTextures(textureIndex).theFileName
+					If Not String.IsNullOrEmpty(eyeballTextureName) AndAlso Not String.Equals(eyeballTextureName, materialName, StringComparison.OrdinalIgnoreCase) Then
+						Throw New System.IO.InvalidDataException("Multiple mesh materials reference the same eyeball; one QC eyeball command cannot preserve that binding.")
+					End If
+					eyeballTextureName = materialName
 				Next
-				If String.IsNullOrEmpty(eyeballTextureName) Then
-					For Each aTexture As SourceMdlTexture2531 In Me.theMdlFileData.theTextures
-						Dim texLower As String = aTexture.theFileName.ToLower()
-						If texLower.Contains("eyeball") Then
-							eyeballTextureName = aTexture.theFileName
-							Exit For
-						End If
-					Next
-				End If
 			End If
 
 			' 2. Fallback to anEyeball.texture if valid, or default name

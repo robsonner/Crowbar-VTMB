@@ -1951,6 +1951,10 @@ Public Class SourceMdlFile2531
 						meshVertexData.lodVertexCount(x) = Me.theInputFileReader.ReadInt32()
 					Next
 					aMesh.vertexData = meshVertexData
+					' v2531 stores eye classification at +24 and eye-record index at +28.
+					' Retain the legacy overlay too; do not change the 60-byte mesh stride.
+					aMesh.materialType = meshVertexData.modelVertexDataP
+					aMesh.materialParam = meshVertexData.lodVertexCount(0)
 
 					' VTMB reuses the final three mesh fields as mesh-relative cloth map offsets.
 					Dim nextMeshPosition As Long = Me.theInputFileReader.BaseStream.Position
