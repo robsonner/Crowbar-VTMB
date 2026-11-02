@@ -3,7 +3,7 @@ Crowbar-VTMB - GoldSource and Source Engine Modding Tool (VTMB Edition)
 
 ## About Crowbar-VTMB
 Crowbar-VTMB is a modified version of Crowbar originally created by ZeqMacaw.
-* **Version:** v0.74-vtmb.1
+* **Version:** v0.74-vtmb.2
 * **Release Notes:** [RELEASE_NOTES.md](RELEASE_NOTES.md)
 * **Original Author:** ZeqMacaw
 * **Modified by:** robsonner
@@ -22,3 +22,24 @@ Always specify `/p:TargetFrameworkVersion=v4.8` to target modern .NET Framework 
 & "C:\Program Files\Microsoft Visual Studio\18\Community\MSBuild\Current\Bin\MSBuild.exe" "Crowbar.sln" /p:Configuration=Release /p:Platform=x86 /p:TargetFrameworkVersion=v4.8 /t:Build
 ```
 Binary output: `Crowbar\bin\x86\Release\CrowbarVTMB.exe`
+
+## Using this release
+
+Extract the release ZIP to a writable folder and run `CrowbarVTMB.exe`.
+Windows and .NET Framework 4.8 are required. The package includes runtime
+dependencies but excludes personal settings, game assets and the compiler.
+
+Decompile the original MDL together with its VTX and optional PHY companions.
+Use fresh exports to obtain the four-influence skinning, eye-material and PHY
+reference-pose corrections; existing source files are not repaired automatically.
+Keep authored sources separately when re-exporting.
+
+VTMB exports now include `.vhb` AxisInterp rules and, where applicable, `.vcloth`
+data and a separate capsule helper SMD. Recompiling the custom QC/VCLOTH commands
+requires the matching updated `studiomdl_vtmb` toolchain; ordinary Valve compilers
+do not implement these extensions. See [VCLOTH](VTMB_VCLOTH.md) and
+[capsule export](VTMB_CAPSULE_PREVIEWS.md).
+
+This is a community release with selected in-game validation. Full coverage of
+facial deformation encoding, complex animation layers and all model/LOD variants
+is not established. See the release notes for scope and limitations.

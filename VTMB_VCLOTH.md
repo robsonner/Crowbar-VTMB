@@ -13,12 +13,18 @@ $Cloth "fabric_material"
 }
 ```
 
-The paired native VTMB compiler now supports the `source` directive and preserves
-the simulation tables. The Blender add-on remains a separate future step. Do not
+The paired native VTMB compiler supports the `source` directive and preserves
+the simulation tables. The separate VTMB Cloth Blender add-on provides editing
+and export workflows; it is not bundled with Crowbar. Do not
 replace `source` with a legacy reconstruction policy: that would discard the
 preserved simulation data.
 
 ## Deferred visual issues (2026-10-31 checkpoint)
+
+Release update (2026-11-02): the user confirmed that the four-influence
+Crowbar/compiler correction resolved the Jeanette skinning issue. The earlier
+three-influence implementation and observations below are historical. The
+Ventrue seam observations do not establish a general fix or complete coverage.
 
 User game tests confirm moving cloth, but report a strip/seam or gap at the
 rigid/cloth boundary on Ventrue and the newly compiled Jeanette skirt. The user

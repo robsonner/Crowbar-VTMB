@@ -1,58 +1,69 @@
-# Crowbar-VTMB — Release Notes
+# Crowbar-VTMB release notes
 
-## Version v0.74-vtmb.1
+## v0.74-vtmb.2 — 2026-11-02
 
-### Overview
-**Crowbar-VTMB** is a dedicated fork of the Crowbar GoldSource/Source engine modding tool (originally created by ZeqMacaw), customized specifically for **Vampire: The Masquerade – Bloodlines** (VTMB, model format MDL v2531).
+Crowbar-VTMB is a community fork of ZeqMacaw's Crowbar for Vampire: The
+Masquerade – Bloodlines (MDL v2531). This release improves source preservation
+and adds cloth export for the updated native VTMB authoring toolchain.
 
-This release introduces native support for Troika's unique Source 2004 branch, enabling seamless decompilation of Bloodlines models into standard, editable QC, SMD, VTA, and VRD source files for authoring, modding, and modern recompilation workflows.
+### Changes since v0.74-vtmb.1
 
----
+- Preserve up to four Type 0 skinning influences in REF/LOD SMD and VCLOTH
+  exports, including the implicit fourth weight. The paired compiler correction
+  resolved the user-tested Jeanette skinning issue.
+- Preserve eye mesh-to-eyeball material bindings from the model instead of
+  guessing left/right assignments from texture names. The QC correction fixed
+  Jeanette's white eyes in the user's game test.
+- Read explicit PHY solid origin/angles and use them for v2531 collision SMD
+  export. The paired compiler/decompiler correction resolved the user-tested
+  Sheriff collision placement issue. Files without those fields retain the
+  previous MDL bind conversion.
+- Export AxisInterp procedural rules as .vhb and reference that filename in QC.
+- Export preserved cloth simulation data as a version 1 .vcloth sidecar attached
+  to the existing REF mesh. No duplicate cloth mesh or artificial cloth rig is
+  required by the current export workflow.
+- Export collision capsules as a separate, rigged *_CAPSULES.smd helper using
+  real bones, with matching QC commands for the updated VTMB compiler.
+- Include the VTMB physics-chain, cloth-capsule and model-flag export work added
+  since the previous release.
 
-### Key Features & Highlights
+### Installation and migration
 
-#### 1. Dedicated VTMB Model Format Support (MDL v2531)
-* **Comprehensive Decompilation:** Native decompilation of Vampire: The Masquerade – Bloodlines `.mdl`, `.vtx`, and `.phy` files into clean, standard-compliant source assets.
-* **Full Vertex Format Support:**
-  * **Type 0 Vertices:** Complete support for uncompressed 32-bit floating-point vertex serialization (44 bytes per vertex: position XYZ, normals XYZ, UV, and bone weights/indices).
-  * **Type 1 & Type 2 Vertices:** Full decoding support for legacy 16-bit and 8-bit quantized vertex formats.
-* **VTMB-Specific Header Integration:**
-  * **Custom `$phonemefilter` QC Extension:** Introduces a custom `$phonemefilter <min> <max>` QC command (*not part of the official Valve/Troika QC command set*). This custom extension was developed specifically for our toolchain to read, preserve, and serialize Troika's unique phoneme transition/crossfade thresholds stored in the model header (offsets `0xE8` and `0xEC`).
-  * Accurate bounding box (`$cbox`, `$bbox`), eye position (`$eyeposition`), and illumination origin (`$illumposition`) extraction.
+Extract the ZIP into a writable folder and run CrowbarVTMB.exe. Windows with
+.NET Framework 4.8 is required. Runtime dependencies are included. Personal
+settings, game-derived assets, the compiler and the Blender add-on are excluded.
 
-#### 2. Geometry, Rigging & Meshes (`.smd`)
-* **Mesh & Strips Reconstruction:** Robust pairing with VTMB companion `.vtx` (v107) files to accurately reconstruct polygon triangles, strips, and body parts.
-* **Bone Rigging & Skinning:** Bind-pose (`skeleton` time 0) and vertex weighting (up to 3 bone weights per vertex) exported cleanly into reference and LOD SMD files.
-* **LOD Support:** Proper separation and export of Level-of-Detail geometry.
+Decompile the ORIGINAL MDL with its VTX and optional PHY companions into a new
+folder. Existing exported SMD/QC/VCLOTH files do not receive fixes automatically.
+Keep authored geometry and capsule changes separately when re-exporting.
 
-#### 3. Skeletal Animations (`.smd`)
-* **Embedded Sequence Decompression:** Direct decompression of RLE rotation and translation keyframes embedded within the `.mdl` file (Bloodlines does not use external streaming `.ani` files).
-* **Automatic Sequence Splitting:** All animations and sequences are organized and extracted into individual SMD files with proper activity names, framerates, loop flags, and events.
+Custom VTMB commands and VCLOTH require the matching updated studiomdl_vtmb
+compiler. Capsule SMDs are helpers, not render meshes; use the compiler's capsule
+helper support. See VTMB_VCLOTH.md and VTMB_CAPSULE_PREVIEWS.md for details.
 
-#### 4. Facial Animation & Flexes (`.vta`)
-* **Blendshapes & Vertex Animations:** Full extraction of facial expressions, eyelid tracking, and phoneme vertex deltas into `.vta` files.
-* **QC Flex Rules Generation:** Clean reconstruction of `$flexfile`, flex controllers, flex descriptions, and flex evaluation expressions.
+### Validation and limitations
 
-#### 5. Procedural Bones & Physics
-* **Procedural Bone Rules (`.vrd`):** Full export of `AxisInterp` and `QuatInterp` procedural bone definitions into companion `.vrd` files referenced via `$proceduralbones`.
-* **Collision Physics (`.phy`):** Physics collision hulls parsed and converted to `_physics.smd` along with `$collisionmodel` and `$collisiontext` blocks.
+Release/x86 build targets .NET Framework 4.8. Selected Jeanette skinning/eye,
+Sheriff PHY and cloth/capsule workflows have user-reported in-game acceptance.
+This is not exhaustive coverage of arbitrary models, render paths or LODs.
 
+Facial vertex deformation encoding still requires investigation; full facial
+fidelity is not claimed. Complex animation ownership masks, autolayers and melee
+metadata preservation remain open work in the paired toolchain. Complete Type
+1/2 decoding and lossless reproduction of every v2531 feature are not claimed.
+Current preserved-cloth authoring is scoped to LOD0. These changes do not include
+an engine solver preview or automatic capsule generation.
 
----
+### Credits and license
 
-### System Requirements & Compatibility
-* **Operating System:** Windows 10 (version 1903 or later) / Windows 11.
-* **Runtime:** .NET Framework 4.8 (pre-installed natively on modern Windows 10/11 out-of-the-box).
-* **Dependencies:** None. All required native and managed components (`lzma`, `steam_api`, `Steamworks.NET`, `CrowbarSteamPipe`, `lzham_x86`) are embedded and self-contained.
+Original Crowbar: ZeqMacaw. VTMB fork: robsonner.
+License: Creative Commons Attribution-ShareAlike 3.0 Unported; see LICENSE.txt.
+Repository: https://github.com/robsonner/Crowbar-VTMB
+The original Crowbar author does not endorse or support this fork. Report issues
+to the fork repository. No game-derived model or texture files are distributed.
 
----
+### Previous release
 
-### Attribution & License
-
-* **Original Author:** ZeqMacaw
-* **Modified by:** robsonner
-* **License:** Creative Commons Attribution-ShareAlike 3.0 Unported (CC BY-SA 3.0)
-* **License URL:** [https://creativecommons.org/licenses/by-sa/3.0/deed.en_US](https://creativecommons.org/licenses/by-sa/3.0/deed.en_US)
-* **Source Repository:** [https://github.com/robsonner/Crowbar-VTMB](https://github.com/robsonner/Crowbar-VTMB)
-
-> **Notice:** This project is a community-driven modification. The original author (ZeqMacaw) does not endorse, sponsor, or officially support this modified version. All support inquiries and issues should be directed to the [Crowbar-VTMB repository](https://github.com/robsonner/Crowbar-VTMB).
+v0.74-vtmb.1 introduced this fork's VTMB decompilation workflow. Its original
+release notes remain in that tag's source history; the scope above supersedes
+older blanket claims of complete format or facial-animation support.
