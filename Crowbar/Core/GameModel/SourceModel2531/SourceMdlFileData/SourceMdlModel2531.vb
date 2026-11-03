@@ -1,4 +1,6 @@
-﻿Public Class SourceMdlModel2531
+﻿Imports System.IO
+
+Public Class SourceMdlModel2531
 
 	Public Sub New()
 		'MyBase.New()
@@ -72,12 +74,9 @@
 
 	Public vertexListType As Integer
 
-	Public unknown01(2) As Double
-	'Public unknownCount As Integer
-	'Public unknownOffset As Integer
-
-	Public unknown02(2) As Double
-	'Public unknown03(5) As Integer
+	' Formats 1 and 2 decode positions as quantized value * scale + offset.
+	Public vertexPositionOffset(2) As Double
+	Public vertexPositionScale(2) As Double
 
 	Public attachmentCount As Integer
 	Public attachmentOffset As Integer
@@ -115,5 +114,63 @@
 	Public Const VLIST_TYPE_SKINNED As Integer = &H0
 	Public Const VLIST_TYPE_UNSKINNED As Integer = &H1
 	Public Const VLIST_TYPE_COMPRESSED As Integer = &H2
+
+	Public Function GetVertexCount() As Integer
+		If Me.vertexListType = VLIST_TYPE_SKINNED Then
+			Return If(Me.theVertexesType0 Is Nothing, 0, Me.theVertexesType0.Count)
+		ElseIf Me.vertexListType = VLIST_TYPE_UNSKINNED Then
+			Return If(Me.theVertexesType1 Is Nothing, 0, Me.theVertexesType1.Count)
+		ElseIf Me.vertexListType = VLIST_TYPE_COMPRESSED Then
+			Return If(Me.theVertexesType2 Is Nothing, 0, Me.theVertexesType2.Count)
+		End If
+		Return 0
+	End Function
+
+	Public Function GetVertexPosition(ByVal vertexIndex As Integer) As SourceVector
+		If Me.vertexListType = VLIST_TYPE_SKINNED Then
+			Dim aVertex As SourceMdlType0Vertex2531 = Me.theVertexesType0(vertexIndex)
+			Return New SourceVector(aVertex.position.x, aVertex.position.y, aVertex.position.z)
+		ElseIf Me.vertexListType = VLIST_TYPE_UNSKINNED Then
+			Dim aVertex As SourceMdlType1Vertex2531 = Me.theVertexesType1(vertexIndex)
+			Return New SourceVector(aVertex.positionX * Me.vertexPositionScale(0) + Me.vertexPositionOffset(0), _
+			 aVertex.positionY * Me.vertexPositionScale(1) + Me.vertexPositionOffset(1), _
+			 aVertex.positionZ * Me.vertexPositionScale(2) + Me.vertexPositionOffset(2))
+		ElseIf Me.vertexListType = VLIST_TYPE_COMPRESSED Then
+			Dim aVertex As SourceMdlType2Vertex2531 = Me.theVertexesType2(vertexIndex)
+			Return New SourceVector(aVertex.positionX / 255.0R * Me.vertexPositionScale(0) + Me.vertexPositionOffset(0), _
+			 aVertex.positionY / 255.0R * Me.vertexPositionScale(1) + Me.vertexPositionOffset(1), _
+			 aVertex.positionZ / 255.0R * Me.vertexPositionScale(2) + Me.vertexPositionOffset(2))
+		End If
+		Throw New InvalidDataException("Unknown v2531 vertex format " + Me.vertexListType.ToString() + ".")
+	End Function
+
+	Public Function GetVertexNormal(ByVal vertexIndex As Integer) As SourceVector
+		Dim normal As SourceVector
+		If Me.vertexListType = VLIST_TYPE_SKINNED Then
+			normal = Me.theVertexesType0(vertexIndex).normal
+		ElseIf Me.vertexListType = VLIST_TYPE_UNSKINNED Then
+			normal = SourceNormalTables2531.FineDirectionFromByteOffset(Me.theVertexesType1(vertexIndex).normalOffset)
+		ElseIf Me.vertexListType = VLIST_TYPE_COMPRESSED Then
+			normal = SourceNormalTables2531.CoarseDirection(Me.theVertexesType2(vertexIndex).normalIndex)
+		Else
+			Throw New InvalidDataException("Unknown v2531 vertex format " + Me.vertexListType.ToString() + ".")
+		End If
+		Return New SourceVector(normal.x, normal.y, normal.z)
+	End Function
+
+	Public Sub GetVertexTexCoord(ByVal vertexIndex As Integer, ByRef u As Double, ByRef v As Double)
+		If Me.vertexListType = VLIST_TYPE_SKINNED Then
+			u = Me.theVertexesType0(vertexIndex).texCoordU
+			v = Me.theVertexesType0(vertexIndex).texCoordV
+		ElseIf Me.vertexListType = VLIST_TYPE_UNSKINNED Then
+			u = Me.theVertexesType1(vertexIndex).texCoordU / 65535.0R
+			v = Me.theVertexesType1(vertexIndex).texCoordV / 65535.0R
+		ElseIf Me.vertexListType = VLIST_TYPE_COMPRESSED Then
+			u = Me.theVertexesType2(vertexIndex).texCoordU / 65535.0R
+			v = Me.theVertexesType2(vertexIndex).texCoordV / 65535.0R
+		Else
+			Throw New InvalidDataException("Unknown v2531 vertex format " + Me.vertexListType.ToString() + ".")
+		End If
+	End Sub
 
 End Class

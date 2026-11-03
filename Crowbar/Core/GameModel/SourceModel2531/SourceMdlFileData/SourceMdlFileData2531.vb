@@ -205,12 +205,12 @@ Public Class SourceMdlFileData2531
 	Public name(127) As Char
 	'Public fileSize As Integer
 
+	' 0x90: unnamed Vector, (0.5, 0.5, 0.5) in every shipped model.
+	' 0x9c: eye position (the game's GetEyePosition reads this one).
+	' 0xa8: illumination position (the bounding-box centre unless set).
+	Public unknownPosition As New SourceVector()
 	Public eyePosition As New SourceVector()
 	Public illuminationPosition As New SourceVector()
-
-	Public unknown01 As Double
-	Public unknown02 As Double
-	Public unknown03 As Double
 
 	Public hullMinPosition As New SourceVector()
 	Public hullMaxPosition As New SourceVector()

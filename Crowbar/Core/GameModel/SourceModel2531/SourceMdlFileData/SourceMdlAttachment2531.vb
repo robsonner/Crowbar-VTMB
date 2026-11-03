@@ -34,28 +34,30 @@
 	'Public vector02 As New SourceVector()
 	'Public vector03 As New SourceVector()
 	'------
-	'      float cX = bytesToFloat(this.file, cOffset + 24);
-	'      float cY = bytesToFloat(this.file, cOffset + 40);
-	'      float cZ = bytesToFloat(this.file, cOffset + 56);
-	'      float cXX = bytesToFloat(this.file, cOffset + 12);
-	'      float cYX = bytesToFloat(this.file, cOffset + 28);
-	'      float cZX = bytesToFloat(this.file, cOffset + 44);
-	'      float cZY = bytesToFloat(this.file, cOffset + 48);
-	'      float cZZ = bytesToFloat(this.file, cOffset + 52);
-	Public cXX As Double '12
-	Public unused01 As Double '16
-	Public unused02 As Double '20
+	' MDL v2531 attachment, 60 bytes: name offset, type, bone, then the
+	' full bone-relative matrix3x4_t (rows of rotation plus translation).
+	' The game concatenates the whole matrix with the bone's transform.
+	Public localM11 As Double '12
+	Public localM12 As Double '16
+	Public localM13 As Double '20
 	Public posX As Double '24
 
-	Public cYX As Double '28
-	Public unused03 As Double '32
-	Public unused04 As Double '36
+	Public localM21 As Double '28
+	Public localM22 As Double '32
+	Public localM23 As Double '36
 	Public posY As Double '40
 
-	Public cZX As Double '44
-	Public cZY As Double '48
-	Public cZZ As Double '52
+	Public localM31 As Double '44
+	Public localM32 As Double '48
+	Public localM33 As Double '52
 	Public posZ As Double '56
+
+	Public Function HasRotation() As Boolean
+		Const tolerance As Double = 0.0001
+		Return Math.Abs(Me.localM11 - 1) > tolerance OrElse Math.Abs(Me.localM12) > tolerance OrElse Math.Abs(Me.localM13) > tolerance _
+		 OrElse Math.Abs(Me.localM21) > tolerance OrElse Math.Abs(Me.localM22 - 1) > tolerance OrElse Math.Abs(Me.localM23) > tolerance _
+		 OrElse Math.Abs(Me.localM31) > tolerance OrElse Math.Abs(Me.localM32) > tolerance OrElse Math.Abs(Me.localM33 - 1) > tolerance
+	End Function
 
 	Public theName As String
 

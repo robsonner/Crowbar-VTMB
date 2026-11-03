@@ -40,16 +40,15 @@ Public Class SourceMdlFile2531
 		Me.theMdlFileData.fileSize = Me.theInputFileReader.ReadInt32()
 		Me.theMdlFileData.theActualFileSize = Me.theInputFileReader.BaseStream.Length
 
+		Me.theMdlFileData.unknownPosition.x = Me.theInputFileReader.ReadSingle()
+		Me.theMdlFileData.unknownPosition.y = Me.theInputFileReader.ReadSingle()
+		Me.theMdlFileData.unknownPosition.z = Me.theInputFileReader.ReadSingle()
 		Me.theMdlFileData.eyePosition.x = Me.theInputFileReader.ReadSingle()
 		Me.theMdlFileData.eyePosition.y = Me.theInputFileReader.ReadSingle()
 		Me.theMdlFileData.eyePosition.z = Me.theInputFileReader.ReadSingle()
 		Me.theMdlFileData.illuminationPosition.x = Me.theInputFileReader.ReadSingle()
 		Me.theMdlFileData.illuminationPosition.y = Me.theInputFileReader.ReadSingle()
 		Me.theMdlFileData.illuminationPosition.z = Me.theInputFileReader.ReadSingle()
-
-		Me.theMdlFileData.unknown01 = Me.theInputFileReader.ReadSingle()
-		Me.theMdlFileData.unknown02 = Me.theInputFileReader.ReadSingle()
-		Me.theMdlFileData.unknown03 = Me.theInputFileReader.ReadSingle()
 
 		Me.theMdlFileData.hullMinPosition.x = Me.theInputFileReader.ReadSingle()
 		Me.theMdlFileData.hullMinPosition.y = Me.theInputFileReader.ReadSingle()
@@ -293,9 +292,6 @@ Public Class SourceMdlFile2531
 					aBoneController.endAngleDegrees = Me.theInputFileReader.ReadSingle()
 					aBoneController.restIndex = Me.theInputFileReader.ReadInt32()
 					aBoneController.inputField = Me.theInputFileReader.ReadInt32()
-					For x As Integer = 0 To aBoneController.unused.Length - 1
-						aBoneController.unused(x) = Me.theInputFileReader.ReadInt32()
-					Next
 
 					Me.theMdlFileData.theBoneControllers.Add(aBoneController)
 
@@ -365,19 +361,19 @@ Public Class SourceMdlFile2531
 					'anAttachment.vector03.x = Me.theInputFileReader.ReadSingle()
 					'anAttachment.vector03.y = Me.theInputFileReader.ReadSingle()
 					'anAttachment.vector03.z = Me.theInputFileReader.ReadSingle()
-					anAttachment.cXX = Me.theInputFileReader.ReadSingle()
-					anAttachment.unused01 = Me.theInputFileReader.ReadSingle()
-					anAttachment.unused02 = Me.theInputFileReader.ReadSingle()
+					anAttachment.localM11 = Me.theInputFileReader.ReadSingle()
+					anAttachment.localM12 = Me.theInputFileReader.ReadSingle()
+					anAttachment.localM13 = Me.theInputFileReader.ReadSingle()
 					anAttachment.posX = Me.theInputFileReader.ReadSingle()
 
-					anAttachment.cYX = Me.theInputFileReader.ReadSingle()
-					anAttachment.unused03 = Me.theInputFileReader.ReadSingle()
-					anAttachment.unused04 = Me.theInputFileReader.ReadSingle()
+					anAttachment.localM21 = Me.theInputFileReader.ReadSingle()
+					anAttachment.localM22 = Me.theInputFileReader.ReadSingle()
+					anAttachment.localM23 = Me.theInputFileReader.ReadSingle()
 					anAttachment.posY = Me.theInputFileReader.ReadSingle()
 
-					anAttachment.cZX = Me.theInputFileReader.ReadSingle()
-					anAttachment.cZY = Me.theInputFileReader.ReadSingle()
-					anAttachment.cZZ = Me.theInputFileReader.ReadSingle()
+					anAttachment.localM31 = Me.theInputFileReader.ReadSingle()
+					anAttachment.localM32 = Me.theInputFileReader.ReadSingle()
+					anAttachment.localM33 = Me.theInputFileReader.ReadSingle()
 					anAttachment.posZ = Me.theInputFileReader.ReadSingle()
 
 
@@ -1752,19 +1748,12 @@ Public Class SourceMdlFile2531
 
 					aModel.vertexListType = Me.theInputFileReader.ReadInt32()
 
-					For x As Integer = 0 To aModel.unknown01.Length - 1
-						aModel.unknown01(x) = Me.theInputFileReader.ReadSingle()
+					For x As Integer = 0 To aModel.vertexPositionOffset.Length - 1
+						aModel.vertexPositionOffset(x) = Me.theInputFileReader.ReadSingle()
 					Next
-
-					'aModel.unknownCount = Me.theInputFileReader.ReadInt32()
-					'aModel.unknownOffset = Me.theInputFileReader.ReadInt32()
-
-					For x As Integer = 0 To aModel.unknown02.Length - 1
-						aModel.unknown02(x) = Me.theInputFileReader.ReadSingle()
+					For x As Integer = 0 To aModel.vertexPositionScale.Length - 1
+						aModel.vertexPositionScale(x) = Me.theInputFileReader.ReadSingle()
 					Next
-					'For x As Integer = 0 To aModel.unknown03.Length - 1
-					'	aModel.unknown03(x) = Me.theInputFileReader.ReadInt32()
-					'Next
 
 					aModel.attachmentCount = Me.theInputFileReader.ReadInt32()
 					aModel.attachmentOffset = Me.theInputFileReader.ReadInt32()
@@ -2045,19 +2034,11 @@ Public Class SourceMdlFile2531
 				aFlex.target2 = Me.theInputFileReader.ReadSingle()
 				aFlex.target3 = Me.theInputFileReader.ReadSingle()
 
-				aFlex.vertCount = Me.theInputFileReader.ReadInt32()
+				aFlex.vertCount = Me.theInputFileReader.ReadInt16()
+				aFlex.unused16 = Me.theInputFileReader.ReadInt16()
 				aFlex.vertOffset = Me.theInputFileReader.ReadInt32()
-
-				aFlex.unknown = Me.theInputFileReader.ReadInt32()
-				'------
-				'aFlex.flexDescPartnerIndex = Me.theInputFileReader.ReadInt32()
-				'aFlex.vertAnimType = Me.theInputFileReader.ReadByte()
-				'For x As Integer = 0 To aFlex.unusedChar.Length - 1
-				'	aFlex.unusedChar(x) = Me.theInputFileReader.ReadChar()
-				'Next
-				'For x As Integer = 0 To aFlex.unused.Length - 1
-				'	aFlex.unused(x) = Me.theInputFileReader.ReadInt32()
-				'Next
+				aFlex.vertAnimType = Me.theInputFileReader.ReadInt16()
+				aFlex.unused1E = Me.theInputFileReader.ReadInt16()
 
 				aMesh.theFlexes.Add(aFlex)
 
@@ -2084,8 +2065,6 @@ Public Class SourceMdlFile2531
 	End Function
 
 	Private Sub ReadVertAnims(ByVal flexInputFileStreamPosition As Long, ByVal aFlex As SourceMdlFlex2531)
-		Dim eyeballInputFileStreamPosition As Long
-		Dim inputFileStreamPosition As Long
 		Dim fileOffsetStart As Long
 		Dim fileOffsetEnd As Long
 		'Dim fileOffsetStart2 As Long
@@ -2095,56 +2074,44 @@ Public Class SourceMdlFile2531
 			Me.theInputFileReader.BaseStream.Seek(flexInputFileStreamPosition + aFlex.vertOffset, SeekOrigin.Begin)
 			fileOffsetStart = Me.theInputFileReader.BaseStream.Position
 
+			If aFlex.vertAnimType <> SourceMdlFlex2531.VERTANIM_TYPE_FULL AndAlso aFlex.vertAnimType <> SourceMdlFlex2531.VERTANIM_TYPE_PACKED Then
+				Throw New InvalidDataException("Unknown v2531 flex vertex animation type " + aFlex.vertAnimType.ToString() + ".")
+			End If
+
 			Dim aVertAnim As SourceMdlVertAnim2531
 			aFlex.theVertAnims = New List(Of SourceMdlVertAnim2531)(aFlex.vertCount)
 			For k As Integer = 0 To aFlex.vertCount - 1
-				eyeballInputFileStreamPosition = Me.theInputFileReader.BaseStream.Position
 				aVertAnim = New SourceMdlVertAnim2531()
 
 				aVertAnim.index = Me.theInputFileReader.ReadUInt16()
+				If aFlex.vertAnimType = SourceMdlFlex2531.VERTANIM_TYPE_FULL Then
+					Me.theInputFileReader.ReadInt16()
+					aVertAnim.delta.x = Me.theInputFileReader.ReadSingle()
+					aVertAnim.delta.y = Me.theInputFileReader.ReadSingle()
+					aVertAnim.delta.z = Me.theInputFileReader.ReadSingle()
+					aVertAnim.normalDeltaDirection = Me.theInputFileReader.ReadUInt16()
+					aVertAnim.normalDeltaLength = Me.theInputFileReader.ReadByte()
+					Me.theInputFileReader.ReadByte()
+				Else
+					aVertAnim.positionDeltaDirection = Me.theInputFileReader.ReadUInt16()
+					aVertAnim.normalDeltaDirection = Me.theInputFileReader.ReadUInt16()
+					aVertAnim.positionDeltaLength = Me.theInputFileReader.ReadByte()
+					aVertAnim.normalDeltaLength = Me.theInputFileReader.ReadByte()
 
-				'aVertAnim.deltaX = Me.theInputFileReader.ReadByte()
-				'aVertAnim.deltaY = Me.theInputFileReader.ReadByte()
-				'aVertAnim.deltaZ = Me.theInputFileReader.ReadByte()
-				'aVertAnim.nDeltaX = Me.theInputFileReader.ReadByte()
-				'aVertAnim.nDeltaY = Me.theInputFileReader.ReadByte()
-				'aVertAnim.nDeltaZ = Me.theInputFileReader.ReadByte()
-				'------
-				'TEST: almost correct
-				'aVertAnim.deltaX = Me.theInputFileReader.ReadSByte()
-				'aVertAnim.deltaY = Me.theInputFileReader.ReadSByte()
-				'aVertAnim.deltaZ = Me.theInputFileReader.ReadSByte()
-				'aVertAnim.nDeltaX = Me.theInputFileReader.ReadSByte()
-				'aVertAnim.nDeltaY = Me.theInputFileReader.ReadSByte()
-				'aVertAnim.nDeltaZ = Me.theInputFileReader.ReadSByte()
-				'------
-				'aVertAnim.deltaX = Me.theInputFileReader.ReadSByte()
-				'aVertAnim.nDeltaX = Me.theInputFileReader.ReadSByte()
-				'aVertAnim.deltaY = Me.theInputFileReader.ReadSByte()
-				'aVertAnim.nDeltaY = Me.theInputFileReader.ReadSByte()
-				'aVertAnim.deltaZ = Me.theInputFileReader.ReadSByte()
-				'aVertAnim.nDeltaZ = Me.theInputFileReader.ReadSByte()
-				'------
-				aVertAnim.deltaX = Me.theInputFileReader.ReadInt16()
-				aVertAnim.deltaY = Me.theInputFileReader.ReadInt16()
-				aVertAnim.deltaZ = Me.theInputFileReader.ReadInt16()
-				'------
-				'For x As Integer = 0 To 2
-				'	aVertAnim.deltaByte(x) = Me.theInputFileReader.ReadByte()
-				'Next
-				'For x As Integer = 0 To 2
-				'	aVertAnim.nDeltaByte(x) = Me.theInputFileReader.ReadByte()
-				'Next
-				'------
-				'For x As Integer = 0 To 2
-				'	aVertAnim.deltaUShort(x) = Me.theInputFileReader.ReadUInt16()
-				'Next
+					Dim positionDirection As SourceVector = SourceNormalTables2531.FineDirectionFromByteOffset(aVertAnim.positionDeltaDirection)
+					Dim positionLength As Double = aVertAnim.positionDeltaLength / 255.0R * SourceMdlVertAnim2531.PositionDeltaRange
+					aVertAnim.delta.x = positionDirection.x * positionLength
+					aVertAnim.delta.y = positionDirection.y * positionLength
+					aVertAnim.delta.z = positionDirection.z * positionLength
+				End If
+
+				Dim normalDirection As SourceVector = SourceNormalTables2531.FineDirectionFromByteOffset(aVertAnim.normalDeltaDirection)
+				Dim normalLength As Double = aVertAnim.normalDeltaLength / 255.0R * SourceMdlVertAnim2531.NormalDeltaRange
+				aVertAnim.nDelta.x = normalDirection.x * normalLength
+				aVertAnim.nDelta.y = normalDirection.y * normalLength
+				aVertAnim.nDelta.z = normalDirection.z * normalLength
 
 				aFlex.theVertAnims.Add(aVertAnim)
-
-				inputFileStreamPosition = Me.theInputFileReader.BaseStream.Position
-
-				Me.theInputFileReader.BaseStream.Seek(inputFileStreamPosition, SeekOrigin.Begin)
 			Next
 
 			'aFlex.theVertAnims.Sort(AddressOf Me.SortVertAnims)
@@ -2256,8 +2223,6 @@ Public Class SourceMdlFile2531
 
 	Private Sub ReadVertexesType1(ByVal modelInputFileStreamPosition As Long, ByVal aModel As SourceMdlModel2531)
 		If aModel.vertexCount > 0 Then
-			Dim hitboxInputFileStreamPosition As Long
-			Dim inputFileStreamPosition As Long
 			Dim fileOffsetStart As Long
 			Dim fileOffsetEnd As Long
 			'Dim fileOffsetStart2 As Long
@@ -2269,51 +2234,16 @@ Public Class SourceMdlFile2531
 
 				aModel.theVertexesType1 = New List(Of SourceMdlType1Vertex2531)(aModel.vertexCount)
 				For j As Integer = 0 To aModel.vertexCount - 1
-					hitboxInputFileStreamPosition = Me.theInputFileReader.BaseStream.Position
-					'fileOffsetStart = Me.theInputFileReader.BaseStream.Position
 					Dim aVertex As New SourceMdlType1Vertex2531()
 
-					'aVertex.positionX = Me.theInputFileReader.ReadUInt16()
-					'aVertex.positionY = Me.theInputFileReader.ReadUInt16()
-					'aVertex.positionZ = Me.theInputFileReader.ReadUInt16()
-					'aVertex.normalIndex = Me.theInputFileReader.ReadUInt16()
-					'aVertex.texCoordU = Me.theInputFileReader.ReadUInt16()
-					'aVertex.texCoordV = Me.theInputFileReader.ReadUInt16()
-					'For x As Integer = 0 To aVertex.unknown.Length - 1
-					'	aVertex.unknown(x) = Me.theInputFileReader.ReadByte()
-					'Next
 					aVertex.positionX = Me.theInputFileReader.ReadUInt16()
 					aVertex.positionY = Me.theInputFileReader.ReadUInt16()
 					aVertex.positionZ = Me.theInputFileReader.ReadUInt16()
-					'aVertex.normalX = Me.theInputFileReader.ReadUInt16()
-					'aVertex.normalY = Me.theInputFileReader.ReadUInt16()
-					'aVertex.normalZ = Me.theInputFileReader.ReadUInt16()
-					aVertex.normalX = Me.theInputFileReader.ReadByte()
-					aVertex.normalY = Me.theInputFileReader.ReadByte()
-					aVertex.normalZ = Me.theInputFileReader.ReadByte()
-					'Me.theInputFileReader.ReadByte()
-					aVertex.texCoordU = Me.theInputFileReader.ReadByte()
-					Me.theInputFileReader.ReadByte()
-					aVertex.texCoordV = Me.theInputFileReader.ReadByte()
-					'Me.theInputFileReader.ReadByte()
-					'aVertex.scaleX = Me.theInputFileReader.ReadByte()
-					'aVertex.scaleY = Me.theInputFileReader.ReadByte()
-					'aVertex.scaleZ = Me.theInputFileReader.ReadByte()
+					aVertex.normalOffset = Me.theInputFileReader.ReadUInt16()
+					aVertex.texCoordU = Me.theInputFileReader.ReadUInt16()
+					aVertex.texCoordV = Me.theInputFileReader.ReadUInt16()
 
 					aModel.theVertexesType1.Add(aVertex)
-
-					'fileOffsetEnd = Me.theInputFileReader.BaseStream.Position - 1
-					'Me.theMdlFileData.theFileSeekLog.Add(fileOffsetStart, fileOffsetEnd, "aVertex")
-
-					inputFileStreamPosition = Me.theInputFileReader.BaseStream.Position
-
-					'DEBUG:
-					Me.theInputFileReader.BaseStream.Seek(hitboxInputFileStreamPosition, SeekOrigin.Begin)
-					For x As Integer = 0 To aVertex.unknown.Length - 1
-						aVertex.unknown(x) = Me.theInputFileReader.ReadByte()
-					Next
-
-					Me.theInputFileReader.BaseStream.Seek(inputFileStreamPosition, SeekOrigin.Begin)
 				Next
 
 				fileOffsetEnd = Me.theInputFileReader.BaseStream.Position - 1
@@ -2345,27 +2275,12 @@ Public Class SourceMdlFile2531
 					'fileOffsetStart = Me.theInputFileReader.BaseStream.Position
 					Dim aVertex As New SourceMdlType2Vertex2531()
 
-					'aVertex.positionX = Me.theInputFileReader.ReadUInt16()
-					'aVertex.positionY = Me.theInputFileReader.ReadUInt16()
-					'aVertex.positionZ = Me.theInputFileReader.ReadUInt16()
-					'aVertex.normalIndex = Me.theInputFileReader.ReadUInt16()
-					'aVertex.texCoordU = Me.theInputFileReader.ReadUInt16()
-					'aVertex.texCoordV = Me.theInputFileReader.ReadUInt16()
-					'For x As Integer = 0 To aVertex.unknown.Length - 1
-					'	aVertex.unknown(x) = Me.theInputFileReader.ReadByte()
-					'Next
 					aVertex.positionX = Me.theInputFileReader.ReadByte()
 					aVertex.positionY = Me.theInputFileReader.ReadByte()
 					aVertex.positionZ = Me.theInputFileReader.ReadByte()
-					'aVertex.positionX = Me.theInputFileReader.ReadSByte()
-					'aVertex.positionY = Me.theInputFileReader.ReadSByte()
-					'aVertex.positionZ = Me.theInputFileReader.ReadSByte()
-
-					aVertex.normalX = Me.theInputFileReader.ReadByte()
-					aVertex.normalY = Me.theInputFileReader.ReadByte()
-					aVertex.texCoordU = Me.theInputFileReader.ReadByte()
-					aVertex.normalZ = Me.theInputFileReader.ReadByte()
-					aVertex.texCoordV = Me.theInputFileReader.ReadByte()
+					aVertex.normalIndex = Me.theInputFileReader.ReadByte()
+					aVertex.texCoordU = Me.theInputFileReader.ReadUInt16()
+					aVertex.texCoordV = Me.theInputFileReader.ReadUInt16()
 
 					aModel.theVertexesType2.Add(aVertex)
 

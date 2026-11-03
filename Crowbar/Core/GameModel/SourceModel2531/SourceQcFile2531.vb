@@ -60,6 +60,21 @@ Public Class SourceQcFile2531
 					line += " "
 					line += anAttachment.posZ.ToString("0.######", TheApp.InternalNumberFormat)
 
+					' "rotate pitch yaw roll" builds the matrix with AngleMatrix;
+					' these are its inverse. Identity rotations are left implicit.
+					If anAttachment.HasRotation() Then
+						Dim angleX As Double
+						Dim angleY As Double
+						Dim angleZ As Double
+						MathModule.ConvertRotationMatrixToDegrees(CSng(anAttachment.localM11), CSng(anAttachment.localM21), CSng(anAttachment.localM31), CSng(anAttachment.localM12), CSng(anAttachment.localM22), CSng(anAttachment.localM32), CSng(anAttachment.localM33), angleX, angleY, angleZ)
+						line += " rotate "
+						line += Math.Round(angleY, 2).ToString("0.######", TheApp.InternalNumberFormat)
+						line += " "
+						line += Math.Round(-angleZ, 2).ToString("0.######", TheApp.InternalNumberFormat)
+						line += " "
+						line += Math.Round(-angleX, 2).ToString("0.######", TheApp.InternalNumberFormat)
+					End If
+
 					Me.theOutputFileStreamWriter.WriteLine(line)
 				Next
 			Catch ex As Exception
@@ -1696,8 +1711,18 @@ Public Class SourceQcFile2531
 		Dim anAnimDescIndex As Integer
 		Dim anAnimationDesc As SourceMdlAnimationDesc2531
 
-		For blendIndex As Integer = 0 To aSequenceDesc.blendCount - 1
-			anAnimDescIndex = aSequenceDesc.anim(blendIndex)(0)
+		' The blend grid is anim[i0][i1], i0 along the first blend axis
+		' (groupSize(0)) and i1 along the second. The compiler fills it from
+		' the QC animation list with the first axis varying fastest, so
+		' write it back in that order.
+		Dim blendWidth As Integer = Math.Max(1, aSequenceDesc.groupSize(0))
+		Dim blendHeight As Integer = Math.Max(1, aSequenceDesc.groupSize(1))
+		If blendWidth * blendHeight <> aSequenceDesc.blendCount OrElse blendWidth > MAXSTUDIOBLENDS OrElse blendHeight > MAXSTUDIOBLENDS Then
+			blendWidth = Math.Min(Math.Max(1, aSequenceDesc.blendCount), MAXSTUDIOBLENDS)
+			blendHeight = 1
+		End If
+		For blendIndex As Integer = 0 To blendWidth * blendHeight - 1
+			anAnimDescIndex = aSequenceDesc.anim(blendIndex Mod blendWidth)(blendIndex \ blendWidth)
 			If anAnimDescIndex >= Me.theMdlFileData.theAnimationDescs.Count Then
 				anAnimDescIndex = Me.theMdlFileData.theAnimationDescs.Count - 1
 			End If
@@ -1728,6 +1753,8 @@ Public Class SourceQcFile2531
 			line += aSequenceDesc.activityWeight.ToString(TheApp.InternalNumberFormat)
 			Me.theOutputFileStreamWriter.WriteLine(line)
 		End If
+
+		Me.WriteSequenceBlendInfo(aSequenceDesc, blendWidth, blendHeight)
 
 		'For i As Integer = 0 To 1
 		'	If aSequenceDesc.blendType(i) <> 0 Then
@@ -1791,6 +1818,37 @@ Public Class SourceQcFile2531
 		'	line += SourceModule2531.GetMultipleControlText(aSequenceDesc.motiontype)
 		'	Me.theOutputFileStreamWriter.WriteLine(line)
 		'End If
+	End Sub
+
+	Private Sub WriteSequenceBlendInfo(ByVal aSequenceDesc As SourceMdlSequenceDesc2531, ByVal blendWidth As Integer, ByVal blendHeight As Integer)
+		Dim line As String
+
+		If Me.theMdlFileData.thePoseParamDescs IsNot Nothing Then
+			For i As Integer = 0 To 1
+				Dim poseParamIndex As Integer = aSequenceDesc.paramIndex(i)
+				If poseParamIndex >= 0 AndAlso poseParamIndex < Me.theMdlFileData.thePoseParamDescs.Count Then
+					line = vbTab
+					line += "blend "
+					line += """"
+					line += Me.theMdlFileData.thePoseParamDescs(poseParamIndex).theName
+					line += """"
+					line += " "
+					line += aSequenceDesc.paramStart(i).ToString("0.######", TheApp.InternalNumberFormat)
+					line += " "
+					line += aSequenceDesc.paramEnd(i).ToString("0.######", TheApp.InternalNumberFormat)
+					Me.theOutputFileStreamWriter.WriteLine(line)
+				End If
+			Next
+		End If
+
+		' Without blendwidth the compiler guesses the grid shape from the
+		' animation count, which turns a 9x1 blend into 3x3.
+		If blendWidth * blendHeight > 1 Then
+			line = vbTab
+			line += "blendwidth "
+			line += blendWidth.ToString(TheApp.InternalNumberFormat)
+			Me.theOutputFileStreamWriter.WriteLine(line)
+		End If
 	End Sub
 
 	Public Sub WritePoseParameterCommand()

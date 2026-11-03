@@ -106,43 +106,13 @@ Public Class SourceVtaFile2531
 			Dim aBodyModel As SourceMdlModel2531
 			Dim vertexCount As Integer
 			aBodyModel = Me.theMdlFileData.theBodyParts(0).theModels(0)
-			If aBodyModel.vertexListType = 0 Then
-				vertexCount = aBodyModel.theVertexesType0.Count
-			ElseIf aBodyModel.vertexListType = 1 Then
-				vertexCount = aBodyModel.theVertexesType1.Count
-			ElseIf aBodyModel.vertexListType = 2 Then
-				vertexCount = aBodyModel.theVertexesType2.Count
-			Else
-				vertexCount = 0
-			End If
+			vertexCount = aBodyModel.GetVertexCount()
 
-			Dim position As New SourceVector()
-			Dim normal As New SourceVector()
+			Dim position As SourceVector
+			Dim normal As SourceVector
 			For vertexIndex As Integer = 0 To vertexCount - 1
-				If aBodyModel.vertexListType = 0 Then
-					position.x = aBodyModel.theVertexesType0(vertexIndex).position.x
-					position.y = aBodyModel.theVertexesType0(vertexIndex).position.y
-					position.z = aBodyModel.theVertexesType0(vertexIndex).position.z
-					normal.x = aBodyModel.theVertexesType0(vertexIndex).normal.x
-					normal.y = aBodyModel.theVertexesType0(vertexIndex).normal.y
-					normal.z = aBodyModel.theVertexesType0(vertexIndex).normal.z
-				ElseIf aBodyModel.vertexListType = 1 Then
-					position.x = (aBodyModel.theVertexesType1(vertexIndex).positionX / 65535) * Me.theMdlFileData.hullMinPosition.y
-					position.y = (aBodyModel.theVertexesType1(vertexIndex).positionY / 65535) * Me.theMdlFileData.hullMinPosition.z
-					position.z = (aBodyModel.theVertexesType1(vertexIndex).positionZ / 65535) * Me.theMdlFileData.hullMinPosition.x
-					normal.x = (aBodyModel.theVertexesType1(vertexIndex).normalX / 65535) * Me.theMdlFileData.hullMaxPosition.x
-					normal.y = (aBodyModel.theVertexesType1(vertexIndex).normalY / 65535) * Me.theMdlFileData.hullMaxPosition.y
-					normal.z = (aBodyModel.theVertexesType1(vertexIndex).normalZ / 65535) * Me.theMdlFileData.hullMaxPosition.z
-				ElseIf aBodyModel.vertexListType = 2 Then
-					position.x = (aBodyModel.theVertexesType2(vertexIndex).positionX / 255) * Me.theMdlFileData.hullMinPosition.y
-					position.y = (aBodyModel.theVertexesType2(vertexIndex).positionY / 255) * Me.theMdlFileData.hullMinPosition.z
-					position.z = (aBodyModel.theVertexesType2(vertexIndex).positionZ / 255) * Me.theMdlFileData.hullMinPosition.x
-					normal.x = (aBodyModel.theVertexesType2(vertexIndex).normalX / 255) * Me.theMdlFileData.hullMaxPosition.x
-					normal.y = (aBodyModel.theVertexesType2(vertexIndex).normalY / 255) * Me.theMdlFileData.hullMaxPosition.y
-					normal.z = (aBodyModel.theVertexesType2(vertexIndex).normalZ / 255) * Me.theMdlFileData.hullMaxPosition.z
-				Else
-					Dim debug As Integer = 4242
-				End If
+				position = aBodyModel.GetVertexPosition(vertexIndex)
+				normal = aBodyModel.GetVertexNormal(vertexIndex)
 
 				line = "    "
 				line += vertexIndex.ToString(TheApp.InternalNumberFormat)
@@ -209,8 +179,8 @@ Public Class SourceVtaFile2531
 	Private Sub WriteVertexAnimLines(ByVal aFlex As SourceMdlFlex2531, ByVal bodyAndMeshVertexIndexStart As Integer)
 		Dim line As String
 		Dim vertexIndex As Integer
-		Dim position As New SourceVector()
-		Dim normal As New SourceVector()
+		Dim position As SourceVector
+		Dim normal As SourceVector
 		Dim aBodyModel As SourceMdlModel2531
 
 		Try
@@ -220,36 +190,17 @@ Public Class SourceVtaFile2531
 				Dim aVertAnim As SourceMdlVertAnim2531
 				aVertAnim = aFlex.theVertAnims(i)
 
+				' The engine adds the decoded deltas, scaled by the flex weight, to
+				' the base position and normal without renormalizing.
 				vertexIndex = aVertAnim.index + bodyAndMeshVertexIndexStart
-				If aBodyModel.vertexListType = 0 Then
-					position.x = aBodyModel.theVertexesType0(vertexIndex).position.x
-					position.y = aBodyModel.theVertexesType0(vertexIndex).position.y
-					position.z = aBodyModel.theVertexesType0(vertexIndex).position.z
-					normal.x = aBodyModel.theVertexesType0(vertexIndex).normal.x
-					normal.y = aBodyModel.theVertexesType0(vertexIndex).normal.y
-					normal.z = aBodyModel.theVertexesType0(vertexIndex).normal.z
-				ElseIf aBodyModel.vertexListType = 1 Then
-					position.x = (aBodyModel.theVertexesType1(vertexIndex).positionX / 65535) * Me.theMdlFileData.hullMinPosition.y
-					position.y = (aBodyModel.theVertexesType1(vertexIndex).positionY / 65535) * Me.theMdlFileData.hullMinPosition.z
-					position.z = (aBodyModel.theVertexesType1(vertexIndex).positionZ / 65535) * Me.theMdlFileData.hullMinPosition.x
-					normal.x = (aBodyModel.theVertexesType1(vertexIndex).normalX / 65535) * Me.theMdlFileData.hullMaxPosition.x
-					normal.y = (aBodyModel.theVertexesType1(vertexIndex).normalY / 65535) * Me.theMdlFileData.hullMaxPosition.y
-					normal.z = (aBodyModel.theVertexesType1(vertexIndex).normalZ / 65535) * Me.theMdlFileData.hullMaxPosition.z
-				ElseIf aBodyModel.vertexListType = 2 Then
-					position.x = (aBodyModel.theVertexesType2(vertexIndex).positionX / 255) * Me.theMdlFileData.hullMinPosition.y
-					position.y = (aBodyModel.theVertexesType2(vertexIndex).positionY / 255) * Me.theMdlFileData.hullMinPosition.z
-					position.z = (aBodyModel.theVertexesType2(vertexIndex).positionZ / 255) * Me.theMdlFileData.hullMinPosition.x
-					normal.x = (aBodyModel.theVertexesType2(vertexIndex).normalX / 255) * Me.theMdlFileData.hullMaxPosition.x
-					normal.y = (aBodyModel.theVertexesType2(vertexIndex).normalY / 255) * Me.theMdlFileData.hullMaxPosition.y
-					normal.z = (aBodyModel.theVertexesType2(vertexIndex).normalZ / 255) * Me.theMdlFileData.hullMaxPosition.z
-				Else
-					Dim debug As Integer = 4242
-				End If
-
-				' VTMB v2531: 16-bit signed quantized delta divided by 32767.0
-				position.x += (aVertAnim.deltaX / 32767.0R)
-				position.y += (aVertAnim.deltaY / 32767.0R)
-				position.z += (aVertAnim.deltaZ / 32767.0R)
+				position = aBodyModel.GetVertexPosition(vertexIndex)
+				normal = aBodyModel.GetVertexNormal(vertexIndex)
+				position.x += aVertAnim.delta.x
+				position.y += aVertAnim.delta.y
+				position.z += aVertAnim.delta.z
+				normal.x += aVertAnim.nDelta.x
+				normal.y += aVertAnim.nDelta.y
+				normal.z += aVertAnim.nDelta.z
 
 				line = "    "
 				line += vertexIndex.ToString(TheApp.InternalNumberFormat)

@@ -1,19 +1,13 @@
 Public Class SourceMdlFlex2531
 
-	'FROM: SourceEngine2003_source HL2 Beta 2003\src_main\Public\studio.h
-	'struct mstudioflex_t
-	'{
-	'	int					flexdesc;	// input value
-	'
-	'	float				target0;	// zero
-	'	float				target1;	// one
-	'	float				target2;	// one
-	'	float				target3;	// zero
-	'
-	'	int					numverts;
-	'	int					vertindex;
-	'	inline	mstudiovertanim_t *pVertanim( int i ) const { return  (mstudiovertanim_t *)(((byte *)this) + vertindex) + i; };
-	'};
+	' MDL v2531 flex, 32 bytes:
+	'	int		flexdesc;
+	'	float	target0, target1, target2, target3;
+	'	short	numverts;
+	'	short	unused16;		// zero in shipped models
+	'	int		vertindex;		// from this flex
+	'	short	vertanimtype;	// 0: 20-byte records, 1: 8-byte records
+	'	short	unused1E;		// not read by the engine
 
 	Public flexDescIndex As Integer
 
@@ -23,15 +17,14 @@ Public Class SourceMdlFlex2531
 	Public target3 As Double
 
 	Public vertCount As Integer
+	Public unused16 As Short
 	Public vertOffset As Integer
-
-	Public unknown As Integer
-	'------
-	'Public flexDescPartnerIndex As Integer
-	'Public vertAnimType As Byte
-	'Public unusedChar(2) As Char
-	'Public unused(5) As Integer
+	Public vertAnimType As Short
+	Public unused1E As Short
 
 	Public theVertAnims As List(Of SourceMdlVertAnim2531)
+
+	Public Const VERTANIM_TYPE_FULL As Short = 0
+	Public Const VERTANIM_TYPE_PACKED As Short = 1
 
 End Class
