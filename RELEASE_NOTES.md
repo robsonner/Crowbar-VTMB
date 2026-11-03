@@ -1,5 +1,17 @@
 # Crowbar-VTMB release notes
 
+## v0.74-vtmb.3 — 2026-11-03
+
+Crowbar-VTMB release addressing unskinned vertex formats, packed flexes, and PHY collision export reliability.
+
+### Changes since v0.74-vtmb.2
+
+- Decode v2531 unskinned vertex formats, packed flexes, and header fields from the game's code (PR #1).
+- Resolve PHY hull bone index -1 for models using an explicit solid reference pose by matching unambiguous identity-bind root bones.
+- Safely stage and atomically replace physics SMD files to prevent empty or corrupted outputs on export errors.
+- Ignore non-terminal tree nodes during PHY triangle export and throw if no valid collision triangles are produced.
+- Infer QC $rootbone for unbound single-solid models and omit empty $rootbone directives.
+
 ## v0.74-vtmb.2 — 2026-11-02
 
 Crowbar-VTMB is a community fork of ZeqMacaw's Crowbar for Vampire: The

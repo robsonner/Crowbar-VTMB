@@ -3,7 +3,7 @@ Crowbar-VTMB - GoldSource and Source Engine Modding Tool (VTMB Edition)
 
 ## About Crowbar-VTMB
 Crowbar-VTMB is a modified version of Crowbar originally created by ZeqMacaw.
-* **Version:** v0.74-vtmb.2
+* **Version:** v0.74-vtmb.3
 * **Release Notes:** [RELEASE_NOTES.md](RELEASE_NOTES.md)
 * **Original Author:** ZeqMacaw
 * **Modified by:** robsonner
