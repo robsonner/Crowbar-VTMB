@@ -391,13 +391,14 @@ Public Class SourceSmdFile2531
 		Dim phyVertex As SourcePhyVertex
 		Dim aVectorTransformed As SourceVector
 		Dim aSourcePhysCollisionModel As SourcePhyPhysCollisionModel
+		Dim writtenTriangles As Integer = 0
 
 		Try
 			If Me.thePhyFileData.theSourcePhyCollisionDatas IsNot Nothing Then
 				For collisionDataIndex As Integer = 0 To Me.thePhyFileData.theSourcePhyCollisionDatas.Count - 1
 					collisionData = Me.thePhyFileData.theSourcePhyCollisionDatas(collisionDataIndex)
 
-					If collisionDataIndex < Me.thePhyFileData.theSourcePhyPhysCollisionModels.Count Then
+					If Me.thePhyFileData.theSourcePhyPhysCollisionModels IsNot Nothing AndAlso collisionDataIndex < Me.thePhyFileData.theSourcePhyPhysCollisionModels.Count Then
 						aSourcePhysCollisionModel = Me.thePhyFileData.theSourcePhyPhysCollisionModels(collisionDataIndex)
 					Else
 						aSourcePhysCollisionModel = Nothing
@@ -406,14 +407,10 @@ Public Class SourceSmdFile2531
 					For faceSectionIndex As Integer = 0 To collisionData.theConvexMeshes.Count - 1
 						faceSection = collisionData.theConvexMeshes(faceSectionIndex)
 
-						If faceSection.theBoneIndex >= Me.theMdlFileData.theBones.Count Then
-							Continue For
-						End If
-						If aSourcePhysCollisionModel IsNot Nothing AndAlso Me.theMdlFileData.theBoneNameToBoneIndexMap.ContainsKey(aSourcePhysCollisionModel.theName) Then
-							boneIndex = Me.theMdlFileData.theBoneNameToBoneIndexMap(aSourcePhysCollisionModel.theName)
-						Else
-							boneIndex = faceSection.theBoneIndex
-						End If
+						' Match the shared modern PHY exporter: tree nodes are not
+						' terminal collision hulls and must not be exported as faces.
+						If (faceSection.flags And 3) <> 0 Then Continue For
+						boneIndex = Me.ResolvePhysicsBoneIndex(faceSection, aSourcePhysCollisionModel)
 						aBone = Me.theMdlFileData.theBones(boneIndex)
 						'aBone = Me.theMdlFileData.theBones(faceSection.theBoneIndex)
 
@@ -449,13 +446,15 @@ Public Class SourceSmdFile2531
 								line += " 0 0"
 								Me.theOutputFileStreamWriter.WriteLine(line)
 							Next
+							writtenTriangles += 1
 						Next
 					Next
 				Next
 			End If
 		Catch ex As Exception
-			Dim debug As Integer = 4242
+			Throw New InvalidDataException("Could not export v2531 physics triangles: " + ex.Message, ex)
 		End Try
+		If writtenTriangles = 0 Then Throw New InvalidDataException("PHY export produced no terminal collision triangles; output was not published.")
 
 		line = "end"
 		Me.theOutputFileStreamWriter.WriteLine(line)
@@ -468,6 +467,48 @@ Public Class SourceSmdFile2531
 #End Region
 
 #Region "Private Methods"
+
+	Private Function ResolvePhysicsBoneIndex(ByVal hull As SourcePhyConvexMesh, ByVal solid As SourcePhyPhysCollisionModel) As Integer
+		' Resolve explicit names before validating the optional hull index.
+		If solid IsNot Nothing AndAlso Not String.IsNullOrEmpty(solid.theName) AndAlso Me.theMdlFileData.theBoneNameToBoneIndexMap.ContainsKey(solid.theName) Then
+			Return Me.theMdlFileData.theBoneNameToBoneIndexMap(solid.theName)
+		End If
+		If hull.theBoneIndex >= 0 AndAlso hull.theBoneIndex < Me.theMdlFileData.theBones.Count Then Return hull.theBoneIndex
+		' A one-bone prop has exactly one possible skinning target. Do not
+		' guess a first/root bone for ambiguous multi-bone collision sources.
+		If Me.theMdlFileData.theBones.Count = 1 Then Return 0
+		' A -1 hull with an explicit solid pose can describe model-space
+		' collision rather than an articulated bone. An identity-bind root is
+		' a lossless SMD carrier for that space, only when uniquely determined.
+		If hull.theBoneIndex = -1 AndAlso solid IsNot Nothing AndAlso solid.theOriginIsValid AndAlso solid.theAnglesAreValid Then
+			Dim modelSpaceBone As Integer = FindModelSpacePhysicsBoneIndex(Me.theMdlFileData)
+			If modelSpaceBone >= 0 Then Return modelSpaceBone
+		End If
+		Throw New InvalidDataException("Cannot resolve PHY hull bone index " + hull.theBoneIndex.ToString(TheApp.InternalNumberFormat) + "; no matching solid bone name, unique one-bone target or unambiguous identity-bind model-space carrier.")
+	End Function
+
+	Public Shared Function FindModelSpacePhysicsBoneIndex(ByVal data As SourceMdlFileData2531) As Integer
+		Dim candidate As Integer = -1
+		For i As Integer = 0 To data.theBones.Count - 1
+			Dim bone As SourceMdlBone2531 = data.theBones(i)
+			If bone.parentBoneIndex <> -1 OrElse String.IsNullOrWhiteSpace(bone.theName) Then Continue For
+			Dim values As Double() = {bone.poseToBoneColumn0.x, bone.poseToBoneColumn0.y, bone.poseToBoneColumn0.z,
+			 bone.poseToBoneColumn1.x, bone.poseToBoneColumn1.y, bone.poseToBoneColumn1.z,
+			 bone.poseToBoneColumn2.x, bone.poseToBoneColumn2.y, bone.poseToBoneColumn2.z,
+			 bone.poseToBoneColumn3.x, bone.poseToBoneColumn3.y, bone.poseToBoneColumn3.z}
+			Dim identity As Boolean = True
+			For k As Integer = 0 To values.Length - 1
+				Dim expected As Double = If(k = 0 OrElse k = 4 OrElse k = 8, 1.0R, 0.0R)
+				' Exact identity: no tolerance-based attachment or pose repair.
+				If values(k) <> expected Then identity = False
+			Next
+			If identity Then
+				If candidate >= 0 Then Return -1
+				candidate = i
+			End If
+		Next
+		Return candidate
+	End Function
 
 	Private Function GetVertexLine(ByVal aBodyModel As SourceMdlModel2531, ByVal aStripGroup As SourceVtxStripGroup107, ByVal aVtxIndexIndex As Integer, ByVal lodIndex As Integer, ByVal meshVertexIndexStart As Integer, ByVal bodyPartVertexIndexStart As Integer) As String
 		Dim line As String
@@ -1277,7 +1318,7 @@ Public Class SourceSmdFile2531
 				c3 = aSourcePhysCollisionModel.theOrigin
 				Return MathModule.VectorTransform(aVector, c0, c1, c2, c3)
 			End If
-			If Me.theMdlFileData.theBoneNameToBoneIndexMap.ContainsKey(aSourcePhysCollisionModel.theName) Then
+			If Not String.IsNullOrEmpty(aSourcePhysCollisionModel.theName) AndAlso Me.theMdlFileData.theBoneNameToBoneIndexMap.ContainsKey(aSourcePhysCollisionModel.theName) Then
 				aBone = Me.theMdlFileData.theBones(Me.theMdlFileData.theBoneNameToBoneIndexMap(aSourcePhysCollisionModel.theName))
 			Else
 				aVectorTransformed.x = 1 / 0.0254 * vertex.z

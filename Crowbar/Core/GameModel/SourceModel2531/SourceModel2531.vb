@@ -180,8 +180,30 @@ Public Class SourceModel2531
 		Me.thePhyFileDataGeneric.thePhysicsMeshSmdFileName = SourceFileNamesModule.CreatePhysicsSmdFileName(Me.thePhyFileDataGeneric.thePhysicsMeshSmdFileName, Me.theName)
 		physicsMeshPathFileName = Path.Combine(modelOutputPath, Me.thePhyFileDataGeneric.thePhysicsMeshSmdFileName)
 		Me.NotifySourceModelProgress(ProgressOptions.WritingFileStarted, physicsMeshPathFileName)
-		Me.WriteTextFile(physicsMeshPathFileName, AddressOf Me.WritePhysicsMeshSmdFile)
-		Me.NotifySourceModelProgress(ProgressOptions.WritingFileFinished, physicsMeshPathFileName)
+		Dim stagingPath As String = physicsMeshPathFileName + "." + Guid.NewGuid().ToString("N") + ".tmp"
+		Dim previousWriter As StreamWriter = Me.theOutputFileTextWriter
+		Try
+			Using writer As New StreamWriter(stagingPath)
+				Me.theOutputFileTextWriter = writer
+				Me.WritePhysicsMeshSmdFile()
+			End Using
+			If File.Exists(physicsMeshPathFileName) Then
+				File.Replace(stagingPath, physicsMeshPathFileName, Nothing)
+			Else
+				File.Move(stagingPath, physicsMeshPathFileName)
+			End If
+			Me.NotifySourceModelProgress(ProgressOptions.WritingFileFinished, physicsMeshPathFileName)
+		Catch ex As Exception
+			status = StatusMessage.Error
+			Me.NotifySourceModelProgress(ProgressOptions.WritingFileFailed, physicsMeshPathFileName + ": " + ex.Message)
+		Finally
+			Me.theOutputFileTextWriter = previousWriter
+			Try
+				If File.Exists(stagingPath) Then File.Delete(stagingPath)
+			Catch cleanupError As Exception
+				System.Diagnostics.Debug.WriteLine("PHY staging cleanup failed: " + cleanupError.Message)
+			End Try
+		End Try
 
 		Return status
 	End Function
@@ -571,18 +593,11 @@ Public Class SourceModel2531
 
 	Protected Overrides Sub WritePhysicsMeshSmdFile()
 		Dim physicsSmdFile As New SourceSmdFile2531(Me.theOutputFileTextWriter, Me.theMdlFileData, Me.thePhyFileDataGeneric)
-
-		Try
-			physicsSmdFile.WriteHeaderComment()
-
-			physicsSmdFile.WriteHeaderSection()
-			physicsSmdFile.WriteNodesSection()
-			physicsSmdFile.WriteSkeletonSection()
-			physicsSmdFile.WriteTrianglesSectionForPhysics()
-		Catch ex As Exception
-			Dim debug As Integer = 4242
-		Finally
-		End Try
+		physicsSmdFile.WriteHeaderComment()
+		physicsSmdFile.WriteHeaderSection()
+		physicsSmdFile.WriteNodesSection()
+		physicsSmdFile.WriteSkeletonSection()
+		physicsSmdFile.WriteTrianglesSectionForPhysics()
 	End Sub
 
 	Protected Overridable Function WriteMeshSmdFiles(ByVal modelOutputPath As String, ByVal lodStartIndex As Integer, ByVal lodStopIndex As Integer) As AppEnums.StatusMessage

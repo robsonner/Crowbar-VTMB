@@ -1459,10 +1459,27 @@ Public Class SourceQcFile2531
 		line += "$rotdamping "
 		line += Me.thePhyFileData.theSourcePhyPhysCollisionModelMostUsedValues.theRotDamping.ToString("0.######", TheApp.InternalNumberFormat)
 		Me.theOutputFileStreamWriter.WriteLine(line)
-		If Me.thePhyFileData.theSourcePhyEditParamsSection.rootName <> "" Then
+		Dim physicsRootName As String = Me.thePhyFileData.theSourcePhyEditParamsSection.rootName
+		Dim hasUnboundHulls As Boolean = False
+		Dim allHullsUnbound As Boolean = True
+		If Me.thePhyFileData.theSourcePhyCollisionDatas IsNot Nothing AndAlso Me.thePhyFileData.theSourcePhyCollisionDatas.Count = 1 Then
+			For Each hull As SourcePhyConvexMesh In Me.thePhyFileData.theSourcePhyCollisionDatas(0).theConvexMeshes
+				If (hull.flags And 3) <> 0 Then Continue For
+				hasUnboundHulls = True
+				If hull.theBoneIndex <> -1 Then allHullsUnbound = False
+			Next
+		End If
+		If String.IsNullOrWhiteSpace(physicsRootName) AndAlso hasUnboundHulls AndAlso allHullsUnbound AndAlso Me.thePhyFileData.theSourcePhyPhysCollisionModels IsNot Nothing AndAlso Me.thePhyFileData.theSourcePhyPhysCollisionModels.Count = 1 Then
+			Dim solid As SourcePhyPhysCollisionModel = Me.thePhyFileData.theSourcePhyPhysCollisionModels(0)
+			If solid.theOriginIsValid AndAlso solid.theAnglesAreValid AndAlso (String.IsNullOrEmpty(solid.theName) OrElse Not Me.theMdlFileData.theBoneNameToBoneIndexMap.ContainsKey(solid.theName)) Then
+				Dim modelSpaceBone As Integer = SourceSmdFile2531.FindModelSpacePhysicsBoneIndex(Me.theMdlFileData)
+				If modelSpaceBone >= 0 Then physicsRootName = Me.theMdlFileData.theBones(modelSpaceBone).theName
+			End If
+		End If
+		If Not String.IsNullOrWhiteSpace(physicsRootName) Then
 			line = vbTab
 			line += "$rootbone """
-			line += Me.thePhyFileData.theSourcePhyEditParamsSection.rootName
+			line += physicsRootName
 			line += """"
 			Me.theOutputFileStreamWriter.WriteLine(line)
 		End If
