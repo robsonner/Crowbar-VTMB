@@ -258,7 +258,7 @@ Public Class SourceModel2531
 			If smdFile.ClothReferenceTriangles IsNot Nothing Then
 				Dim clothPath As String = SourceMdlClothMesh2531.DataFileName(smdPathFileName)
 				Me.NotifySourceModelProgress(ProgressOptions.WritingFileStarted, clothPath)
-				Dim document As String = SourceVclothFile2531.Serialize(aModel, Me.theMdlFileData, Path.GetFileName(smdPathFileName), smdFile.ClothReferenceTriangles)
+				Dim document As String = SourceVclothFile2531.Serialize(aModel, Me.theMdlFileData, smdFile.ClothReferenceTriangles)
 				File.WriteAllText(clothPath, document, New System.Text.UTF8Encoding(False))
 				Me.NotifySourceModelProgress(ProgressOptions.WritingFileFinished, clothPath)
 			End If
@@ -547,6 +547,7 @@ Public Class SourceModel2531
 			qcFile.WriteBodyGroupCommand()
 			qcFile.WriteLodCommand()
 
+			qcFile.WriteVtmbBoneRotationCommands()
 			qcFile.WriteProceduralBonesCommand()
 
 			qcFile.WriteStaticPropCommand()

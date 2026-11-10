@@ -1225,6 +1225,30 @@ Public Class SourceQcFile2531
 		End If
 	End Sub
 
+	Public Sub WriteVtmbBoneRotationCommands()
+		If Me.theMdlFileData.theBones Is Nothing Then
+			Return
+		End If
+
+		Dim wroteHeader As Boolean = False
+		For Each aBone As SourceMdlBone2531 In Me.theMdlFileData.theBones
+			' Preserve the MDL split-inheritance bit; never infer it from bone names or positions.
+			If (aBone.flags And &H2) = 0 Then
+				Continue For
+			End If
+			If Not wroteHeader Then
+				Me.theOutputFileStreamWriter.WriteLine()
+				wroteHeader = True
+			End If
+			Dim command As String = "$vtmbbonerotation "
+			If TheApp.Settings.DecompileQcUseMixedCaseForKeywordsIsChecked Then
+				command = "$VTMBBoneRotation "
+			End If
+			' SMD rotations remain parent-local; the native VTMB compiler restores model-space encoding.
+			Me.theOutputFileStreamWriter.WriteLine(command + """" + aBone.theName + """ ""model""")
+		Next
+	End Sub
+
 	Public Sub WriteProceduralBonesCommand()
 		If Me.theMdlFileData.theProceduralBonesCommandIsUsed Then
 			Me.theOutputFileStreamWriter.WriteLine()

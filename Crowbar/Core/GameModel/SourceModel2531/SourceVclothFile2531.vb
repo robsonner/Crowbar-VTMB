@@ -47,7 +47,7 @@ Public Class SourceVclothFile2531
 		Return New Dictionary(Of String, Object) From {{"parent_bone", Integer.Parse(values(0), CultureInfo.InvariantCulture)}, {"position", New Double() {geometry(0), geometry(1), geometry(2)}}, {"normal", New Double() {geometry(3), geometry(4), geometry(5)}}, {"uv", New Double() {geometry(6), geometry(7)}}, {"skinning", skinning}}
 	End Function
 
-	Public Shared Function Serialize(ByVal model As SourceMdlModel2531, ByVal data As SourceMdlFileData2531, ByVal referenceFile As String, ByVal referenceTriangles As List(Of SourceVclothReferenceTriangle2531)) As String
+	Public Shared Function Serialize(ByVal model As SourceMdlModel2531, ByVal data As SourceMdlFileData2531, ByVal referenceTriangles As List(Of SourceVclothReferenceTriangle2531)) As String
 		Dim cloth As SourceMdlClothMesh2531 = model.theClothMesh
 		If cloth Is Nothing OrElse Not cloth.isDataReady Then Throw New InvalidDataException("VCLOTH data is unavailable or invalid.")
 		If referenceTriangles Is Nothing OrElse referenceTriangles.Count = 0 Then Throw New InvalidDataException("VCLOTH requires exported REF triangles.")
@@ -104,7 +104,7 @@ Public Class SourceVclothFile2531
 			tangents.Add(New Dictionary(Of String, Object) From {{"edges", New Integer() {tangent.edge0, tangent.edge1}}, {"coefficients", New Single() {tangent.coefficient0, tangent.coefficient1}}})
 		Next
 		Dim document As New Dictionary(Of String, Object) From {
-			{"format", "vtmb-cloth"}, {"version", 1}, {"reference_smd", referenceFile}, {"lod", 0},
+			{"format", "vtmb-cloth"}, {"version", 1}, {"lod", 0},
 			{"coordinate_space", "reference_model"}, {"source_model", data.theModelName},
 			{"reference", New Dictionary(Of String, Object) From {{"bones", bones}, {"vertices", vertices}, {"triangles", faces}, {"meshes", meshes}}},
 			{"simulation", New Dictionary(Of String, Object) From {{"time_step_scale", cloth.header.stiffness}, {"nodes", nodes}, {"springs", springs}, {"edges", cloth.theEdges}, {"normal_edge_prefix", cloth.normalEdgePrefix}, {"triangles", cloth.theTriangles}, {"tangents", tangents}, {"collision_neighbors", cloth.theCollisionNeighbors}, {"structural_batch_count", cloth.header.val2}, {"batch_sizes", cloth.theBatchSizes}}}}
