@@ -105,7 +105,7 @@ Public Class SourceVclothFile2531
 		Next
 		Dim document As New Dictionary(Of String, Object) From {
 			{"format", "vtmb-cloth"}, {"version", 1}, {"lod", 0},
-			{"coordinate_space", "reference_model"}, {"source_model", data.theModelName},
+			{"coordinate_space", "reference_model"},
 			{"reference", New Dictionary(Of String, Object) From {{"bones", bones}, {"vertices", vertices}, {"triangles", faces}, {"meshes", meshes}}},
 			{"simulation", New Dictionary(Of String, Object) From {{"time_step_scale", cloth.header.stiffness}, {"nodes", nodes}, {"springs", springs}, {"edges", cloth.theEdges}, {"normal_edge_prefix", cloth.normalEdgePrefix}, {"triangles", cloth.theTriangles}, {"tangents", tangents}, {"collision_neighbors", cloth.theCollisionNeighbors}, {"structural_batch_count", cloth.header.val2}, {"batch_sizes", cloth.theBatchSizes}}}}
 		Dim result As New StringBuilder()

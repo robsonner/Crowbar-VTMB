@@ -46,14 +46,13 @@ The file is UTF-8 JSON without a BOM. Root fields:
 | Field | Meaning |
 | --- | --- |
 | `format`, `version` | `"vtmb-cloth"`, integer `1`; reject unsupported versions |
-| `source_model` | Original MDL model name, provenance only |
 | `lod` | `0` in version 1 |
 | `coordinate_space` | `"reference_model"` |
 | `reference` | Original vertex identities, actual SMD corner attributes, triangles, real bones and maps |
 | `simulation` | Original points, springs and decoded surface/runtime tables |
 
 File binding is declared exclusively by the QC model/source directives.
-`reference_smd` is no longer emitted; obsolete entries are ignored by the
+`reference_smd` and unused `source_model` are no longer emitted; obsolete entries are ignored by the
 compiler and Blender add-on. For Blender use, keep the REF SMD and VCLOTH in
 the same directory with the same filename stem; rename both files together.
 Actual geometry, skeleton and binding validation remains mandatory.
