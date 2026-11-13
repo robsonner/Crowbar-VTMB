@@ -1,5 +1,26 @@
 # Crowbar-VTMB release notes
 
+## v0.74-vtmb.4 — 2026-11-13
+
+Preserve explicit VTMB bone rotation spaces in QC and simplify REF/VCLOTH file pairing.
+
+### Changes since v0.74-vtmb.3
+
+- Export `$vtmbbonerotation "bone_name" "model"` for each source MDL bone carrying flag bit `0x02`. Bone identity and flags come directly from the model; no bone-name or position heuristic is used. SMD animation rotations remain parent-local.
+- Stop emitting obsolete `reference_smd` and unused `source_model` metadata in VCLOTH. QC model/source directives define compiler file binding; geometry, skeleton and cloth binding validation remains required.
+- Add bone-rotation documentation and update the VCLOTH format documentation.
+- Update the application version and Windows assembly metadata to `v0.74-vtmb.4` / `0.74.4.0`.
+
+### Compatibility and migration
+
+- New QC exports containing `$vtmbbonerotation` require an updated native `studiomdl_vtmb` compiler supporting this command. Older compilers may reject it.
+- Use the updated VTMB Cloth add-on (0.10.3) for the current metadata-free VCLOTH workflow. Keep each REF SMD and VCLOTH in the same folder with the same filename stem; rename both together.
+- Decompile an original MDL into a new folder to obtain these changes. A rotation flag already lost in a previously malformed MDL cannot be recovered automatically. Keep authored sources separately when re-exporting.
+
+### Validation scope
+
+The paired compiler's explicit-rotation correction has user-reported in-game acceptance for a fitted Christof replacement. This is a specific compiler case, not exhaustive validation of Crowbar round trips. Full Blender export/game acceptance for the latest pairing and metadata changes remains pending. Existing toolchain limitations still apply.
+
 ## v0.74-vtmb.3 — 2026-11-03
 
 Crowbar-VTMB release addressing unskinned vertex formats, packed flexes, and PHY collision export reliability.

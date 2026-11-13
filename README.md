@@ -3,7 +3,7 @@ Crowbar-VTMB - GoldSource and Source Engine Modding Tool (VTMB Edition)
 
 ## About Crowbar-VTMB
 Crowbar-VTMB is a modified version of Crowbar originally created by ZeqMacaw.
-* **Version:** v0.74-vtmb.3
+* **Version:** v0.74-vtmb.4
 * **Release Notes:** [RELEASE_NOTES.md](RELEASE_NOTES.md)
 * **Original Author:** ZeqMacaw
 * **Modified by:** robsonner
@@ -39,6 +39,11 @@ data and a separate capsule helper SMD. Recompiling the custom QC/VCLOTH command
 requires the matching updated `studiomdl_vtmb` toolchain; ordinary Valve compilers
 do not implement these extensions. See [VCLOTH](VTMB_VCLOTH.md) and
 [capsule export](VTMB_CAPSULE_PREVIEWS.md).
+
+QC exports preserve explicit VTMB model-space bone rotations using
+`$vtmbbonerotation`; recompilation requires a native VTMB compiler supporting
+this command. For Blender cloth editing, keep REF SMD and VCLOTH together with
+the same filename stem. See [bone rotation](VTMB_BONE_ROTATION.md).
 
 This is a community release with selected in-game validation. Full coverage of
 facial deformation encoding, complex animation layers and all model/LOD variants
