@@ -563,14 +563,8 @@ Public Class SourceSmdFile2531
 				aBodyModel.GetVertexTexCoord(vertexIndex, texCoordU, texCoordV)
 			End If
 
-			'NOTE: Clamp the UV coords so they are always between 0 and 1.
-			'      Example that has U > 1: "models\items\jadedragon\info\info_jadedragon.mdl"
-			If texCoordU < 0 OrElse texCoordU > 1 Then
-				texCoordU -= Math.Truncate(texCoordU)
-			End If
-			If texCoordV < 0 OrElse texCoordV > 1 Then
-				texCoordV -= Math.Truncate(texCoordV)
-			End If
+			'Preserve UVs outside [0, 1]. Wrapping individual corners changes
+			'texture interpolation across triangles and destroys texture tiling.
 
 			line = "  "
 			line += boneIndexes(0).ToString(TheApp.InternalNumberFormat)
