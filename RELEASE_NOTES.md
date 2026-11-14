@@ -1,5 +1,18 @@
 # Crowbar-VTMB release notes
 
+## v0.74-vtmb.5 — 2026-11-14
+
+Fix texture coordinate preservation in VTMB SMD exports.
+
+### Changes since v0.74-vtmb.4
+
+- Preserve UV coordinates outside [0, 1] in v2531 reference and LOD SMD exports. Removing per-corner wrapping prevents changes to texture interpolation and tiling, including the reported refrigerator door distortion.
+- Update the application version and Windows assembly metadata to `v0.74-vtmb.5` / `0.74.5.0`.
+
+### Migration and validation
+
+Decompile the original MDL into a new folder and recompile the new sources. Previously exported SMD files already contain altered UVs and are not repaired automatically. Source/model-data comparison confirms the old export corruption; viewer/game acceptance of the corrected round trip remains pending.
+
 ## v0.74-vtmb.4 — 2026-11-13
 
 Preserve explicit VTMB bone rotation spaces in QC and simplify REF/VCLOTH file pairing.
